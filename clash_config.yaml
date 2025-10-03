@@ -47,7 +47,7 @@ rule-providers:
   Youtube:
     type: http
     behavior: classical
-    url: hhttps://raw.githubusercontent.com/john-smith-matter/vpn_conf/refs/heads/main/youtube.yaml
+    url: https://raw.githubusercontent.com/john-smith-matter/vpn_conf/refs/heads/main/youtube.yaml
     interval: 86400
     path: ./ruleset/youtube.yaml
 
