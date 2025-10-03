@@ -61,10 +61,10 @@ rules:
   - DOMAIN-KEYWORD,youtube,specified
   - DOMAIN-SUFFIX,youtu.be,specified
   - DOMAIN-SUFFIX,yt.be,specified
-  - DOMAIN-SUFFIX,ggpht.cn
-  - DOMAIN-SUFFIX,ggpht.com
-  - DOMAIN-SUFFIX,gvt1.com
-  - DOMAIN-SUFFIX,gvt2.com
+  - DOMAIN-SUFFIX,ggpht.cn,specified
+  - DOMAIN-SUFFIX,ggpht.com,specified
+  - DOMAIN-SUFFIX,gvt1.com,specified
+  - DOMAIN-SUFFIX,gvt2.com,specified
   - DOMAIN-KEYWORD,google,specified
   - DOMAIN-KEYWORD,gstatic,specified
   - DOMAIN-SUFFIX,abc.xyz,specified
