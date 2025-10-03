@@ -25,8 +25,6 @@ dns:
 
   nameserver-policy:
     'rule-set:Youtube':  https://1.1.1.1/dns-query#specified
-    'rule-set:YoutubeMusic': https://1.1.1.1/dns-query#specified
-    'rule-set:Google': https://1.1.1.1/dns-query#specified
 
   enhanced-mode: fake-ip
   fake-ip-filter:
@@ -45,6 +43,14 @@ dns:
 proxies: []
 proxy-groups: []
 
+rule-providers:
+  Youtube:
+    type: http
+    behavior: classical
+    url: hhttps://raw.githubusercontent.com/john-smith-matter/vpn_conf/refs/heads/main/youtube.yaml
+    interval: 86400
+    path: ./ruleset/youtube.yaml
+
 rules:
   ## cloudflare-dns
   - DOMAIN,cloudflare-dns.com,default
@@ -58,16 +64,7 @@ rules:
   - DOMAIN-SUFFIX,ytimg.com,default
   - DOMAIN-SUFFIX,video.google.com,default
   ## google & youtube api
-  - DOMAIN-KEYWORD,youtube,specified
-  - DOMAIN-SUFFIX,youtu.be,specified
-  - DOMAIN-SUFFIX,yt.be,specified
-  - DOMAIN-SUFFIX,ggpht.cn,specified
-  - DOMAIN-SUFFIX,ggpht.com,specified
-  - DOMAIN-SUFFIX,gvt1.com,specified
-  - DOMAIN-SUFFIX,gvt2.com,specified
-  - DOMAIN-KEYWORD,google,specified
-  - DOMAIN-KEYWORD,gstatic,specified
-  - DOMAIN-SUFFIX,abc.xyz,specified
+  - RULE-SET,Youtube,specified
 
   ## IP测试
   - DOMAIN-SUFFIX,ifconfig.me,specified

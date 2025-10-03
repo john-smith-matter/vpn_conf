@@ -1,0 +1,16 @@
+payload:
+  ## youtube content delivery
+  - DOMAIN-SUFFIX,googlevideo.com
+  - DOMAIN-SUFFIX,ytimg.com
+  - DOMAIN-SUFFIX,video.google.com
+  ## google & youtube api
+  - DOMAIN-KEYWORD,youtube
+  - DOMAIN-SUFFIX,youtu.be
+  - DOMAIN-SUFFIX,yt.be
+  - DOMAIN-SUFFIX,ggpht.cn
+  - DOMAIN-SUFFIX,ggpht.com
+  - DOMAIN-SUFFIX,gvt1.com
+  - DOMAIN-SUFFIX,gvt2.com
+  - DOMAIN-KEYWORD,google
+  - DOMAIN-KEYWORD,gstatic
+  - DOMAIN-SUFFIX,abc.xyz
