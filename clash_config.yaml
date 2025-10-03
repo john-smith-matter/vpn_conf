@@ -45,38 +45,6 @@ dns:
 proxies: []
 proxy-groups: []
 
-rule-providers:
-  Youtube:
-    type: http
-    behavior: classical
-    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/YouTube/YouTube.yaml
-    path: ./rulesets/youtube.yaml
-    interval: 86400
-  YoutubeMusic:
-    type: http
-    behavior: classical
-    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/YouTubeMusic/YouTubeMusic.yaml
-    path: ./rulesets/youtubemusic.yaml
-    interval: 86400
-  Google:
-    type: http
-    behavior: classical
-    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Google/Google.yaml
-    path: ./rulesets/google.yaml
-    interval: 86400
-  China:
-    type: http
-    behavior: classical
-    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/China/China_Classical.yaml
-    path: ./rulesets/china.yaml
-    interval: 86400
-  Microsoft:
-    type: http
-    behavior: classical
-    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Microsoft/Microsoft.yaml
-    path: ./rulesets/microsoft.yaml
-    interval: 86400 
-
 rules:
   ## cloudflare-dns
   - DOMAIN,cloudflare-dns.com,default
@@ -84,17 +52,23 @@ rules:
   - IP-CIDR,1.0.0.1/32,default
   ## github
   - DOMAIN-KEYWORD,github,default
-  
-  ## microsoft
-  - RULE-SET,Microsoft,default
     
-  ## youtube
+  ## youtube content delivery
   - DOMAIN-SUFFIX,googlevideo.com,default
   - DOMAIN-SUFFIX,ytimg.com,default
   - DOMAIN-SUFFIX,video.google.com,default
-  - RULE-SET,Youtube,specified
-  - RULE-SET,YoutubeMusic,specified
-  - RULE-SET,Google,specified
+  ## google & youtube api
+  - DOMAIN-KEYWORD,youtube,specified
+  - DOMAIN-SUFFIX,youtu.be,specified
+  - DOMAIN-SUFFIX,yt.be,specified
+  - DOMAIN-SUFFIX,ggpht.cn
+  - DOMAIN-SUFFIX,ggpht.com
+  - DOMAIN-SUFFIX,gvt1.com
+  - DOMAIN-SUFFIX,gvt2.com
+  - DOMAIN-KEYWORD,google,specified
+  - DOMAIN-KEYWORD,gstatic,specified
+  - DOMAIN-SUFFIX,abc.xyz,specified
+
   ## IP测试
   - DOMAIN-SUFFIX,ifconfig.me,specified
   
@@ -103,9 +77,9 @@ rules:
   - DOMAIN-SUFFIX,nubia.cn,DIRECT
   - DOMAIN-SUFFIX,zte.com.cn,DIRECT
   - DOMAIN-SUFFIX,redmagic.com,DIRECT
+  - DOMAIN-SUFFIX,cn,DIRECT
   - GEOSITE,cn,DIRECT
   - GEOIP,cn,DIRECT
-  - RULE-SET,China,DIRECT
   - GEOIP,private,DIRECT,no-resolve
   
   ## 广告阻止
