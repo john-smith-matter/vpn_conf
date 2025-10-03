@@ -1,0 +1,114 @@
+mixed-port: 7890
+mode: rule
+external-controller: 127.0.0.1:9090
+
+# geoip设置
+geodata-mode: false
+geox-url:
+  mmdb: "https://github.com/MetaCubeX/meta-rules-dat/releases/latest/download/country-lite.mmdb"
+etag-support: true
+global-ua: clash.meta
+
+dns:
+  enable: true
+  listen: 127.0.0.1:53
+  ipv6: false
+  dns-direct-nameserver:
+    - 1.1.1.1
+    - 1.0.0.1
+  proxy-server-nameserver:
+    - 1.1.1.1
+    - 1.0.0.1
+  nameserver:
+    - https://1.1.1.1/dns-query#default
+    - https://1.0.0.1/dns-query#default
+
+  nameserver-policy:
+    'rule-set:Youtube':  https://1.1.1.1/dns-query#specified
+    'rule-set:YoutubeMusic': https://1.1.1.1/dns-query#specified
+    'rule-set:Google': https://1.1.1.1/dns-query#specified
+
+  enhanced-mode: fake-ip
+  fake-ip-filter:
+    - +.stun.*.*
+    - +.stun.*.*.*
+    - +.stun.*.*.*.*
+    - +.stun.*.*.*.*.*
+    - "*.n.n.srv.nintendo.net"
+    - +.stun.playstation.net
+    - xbox.*.*.microsoft.com
+    - "*.*.xboxlive.com"
+    - "*.msftncsi.com"
+    - "*.msftconnecttest.com"
+    - WORKGROUP
+
+proxies: []
+proxy-groups: []
+
+rule-providers:
+  Youtube:
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/YouTube/YouTube.yaml
+    path: ./rulesets/youtube.yaml
+    interval: 86400
+  YoutubeMusic:
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/YouTubeMusic/YouTubeMusic.yaml
+    path: ./rulesets/youtubemusic.yaml
+    interval: 86400
+  Google:
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Google/Google.yaml
+    path: ./rulesets/google.yaml
+    interval: 86400
+  China:
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/China/China_Classical.yaml
+    path: ./rulesets/china.yaml
+    interval: 86400
+  Microsoft:
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Microsoft/Microsoft.yaml
+    path: ./rulesets/microsoft.yaml
+    interval: 86400 
+
+rules:
+  ## cloudflare-dns
+  - DOMAIN,cloudflare-dns.com,default
+  - IP-CIDR,1.1.1.1/32,default
+  - IP-CIDR,1.0.0.1/32,default
+  ## github
+  - DOMAIN-KEYWORD,github,default
+  
+  ## microsoft
+  - RULE-SET,Microsoft,default
+    
+  ## youtube
+  - DOMAIN-SUFFIX,googlevideo.com,default
+  - DOMAIN-SUFFIX,ytimg.com,default
+  - DOMAIN-SUFFIX,video.google.com,default
+  - RULE-SET,Youtube,specified
+  - RULE-SET,YoutubeMusic,specified
+  - RULE-SET,Google,specified
+  ## IP测试
+  - DOMAIN-SUFFIX,ifconfig.me,specified
+  
+  ## 直连
+  - DOMAIN-SUFFIX,nubia.com,DIRECT
+  - DOMAIN-SUFFIX,nubia.cn,DIRECT
+  - DOMAIN-SUFFIX,zte.com.cn,DIRECT
+  - DOMAIN-SUFFIX,redmagic.com,DIRECT
+  - GEOSITE,cn,DIRECT
+  - GEOIP,cn,DIRECT
+  - RULE-SET,China,DIRECT
+  - GEOIP,private,DIRECT,no-resolve
+  
+  ## 广告阻止
+  - GEOSITE,category-public-tracker,REJECT
+  
+  - MATCH,default
