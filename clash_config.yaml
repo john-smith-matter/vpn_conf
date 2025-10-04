@@ -24,7 +24,7 @@ dns:
     - https://1.0.0.1/dns-query#default
 
   nameserver-policy:
-    'rule-set:Youtube':  https://1.1.1.1/dns-query#specified
+    'rule-set:youtube_api':  https://1.1.1.1/dns-query#specified
 
   enhanced-mode: fake-ip
   fake-ip-filter:
