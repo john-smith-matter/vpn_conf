@@ -49,13 +49,13 @@ rule-providers:
     behavior: classical
     url: https://raw.githubusercontent.com/john-smith-matter/vpn_conf/refs/heads/main/youtube_api.yaml
     interval: 86400
-    path: ./ruleset/youtube_api.yaml
+    path: ./rulesets/youtube_api.yaml
   youtube_cdn:
     type: http
     behavior: classical
     url: https://raw.githubusercontent.com/john-smith-matter/vpn_conf/refs/heads/main/youtube_cdn.yaml
     interval: 86400
-    path: ./ruleset/youtube_cdn.yaml
+    path: ./rulesets/youtube_cdn.yaml
 
 rules:
   ## cloudflare-dns
