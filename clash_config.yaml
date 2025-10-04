@@ -56,6 +56,12 @@ rule-providers:
     url: https://raw.githubusercontent.com/john-smith-matter/vpn_conf/refs/heads/main/youtube_cdn.yaml
     interval: 86400
     path: ./rulesets/youtube_cdn.yaml
+  microsoft:
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Microsoft/Microsoft.yaml
+    interval: 86400
+    path: ./rulesets/microsoft.yaml
 
 rules:
   ## cloudflare-dns
@@ -68,6 +74,9 @@ rules:
   ## youtube
   - RULE-SET,youtube_cdn,default
   - RULE-SET,youtube_api,specified
+
+  ## microsoft
+  - RULE-SET,microsoft,default
 
   ## IP测试
   - DOMAIN-SUFFIX,ifconfig.me,specified
