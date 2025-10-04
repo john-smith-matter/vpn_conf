@@ -1,0 +1,8 @@
+payload:
+  - DOMAIN-KEYWORD,youtube
+  - DOMAIN-KEYWORD,google
+  - DOMAIN-SUFFIX,youtu.be
+  - DOMAIN-SUFFIX,yt.be
+  - DOMAIN-SUFFIX,gvt1.com
+  - DOMAIN-SUFFIX,gvt2.com
+  - DOMAIN-SUFFIX,abc.xyz

@@ -44,12 +44,18 @@ proxies: []
 proxy-groups: []
 
 rule-providers:
-  Youtube:
+  youtube_api:
     type: http
     behavior: classical
-    url: https://raw.githubusercontent.com/john-smith-matter/vpn_conf/refs/heads/main/youtube.yaml
+    url: https://raw.githubusercontent.com/john-smith-matter/vpn_conf/refs/heads/main/youtube_api.yaml
     interval: 86400
-    path: ./ruleset/youtube.yaml
+    path: ./ruleset/youtube_api.yaml
+  youtube_cdn:
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontent.com/john-smith-matter/vpn_conf/refs/heads/main/youtube_cdn.yaml
+    interval: 86400
+    path: ./ruleset/youtube_cdn.yaml
 
 rules:
   ## cloudflare-dns
@@ -59,12 +65,9 @@ rules:
   ## github
   - DOMAIN-KEYWORD,github,default
     
-  ## youtube content delivery
-  - DOMAIN-SUFFIX,googlevideo.com,default
-  - DOMAIN-SUFFIX,ytimg.com,default
-  - DOMAIN-SUFFIX,video.google.com,default
-  ## google & youtube api
-  - RULE-SET,Youtube,specified
+  ## youtube
+  - RULE-SET,youtube_cdn,default
+  - RULE-SET,youtube_api,specified
 
   ## IP测试
   - DOMAIN-SUFFIX,ifconfig.me,specified

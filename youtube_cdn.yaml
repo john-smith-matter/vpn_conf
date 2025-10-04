@@ -1,0 +1,7 @@
+payload:
+  - DOMAIN-SUFFIX,googlevideo.com
+  - DOMAIN-SUFFIX,ytimg.com
+  - DOMAIN-SUFFIX,video.google.com
+  - DOMAIN-SUFFIX,ggpht.cn
+  - DOMAIN-SUFFIX,ggpht.com
+  - DOMAIN-KEYWORD,gstatic
