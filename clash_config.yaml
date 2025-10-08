@@ -59,11 +59,6 @@ rule-providers:
     behavior: classical
     url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Microsoft/Microsoft.yaml
     path: ./rulesets/microsoft.yaml
-  forbidden:
-    type: http
-    behavior: classical
-    url: https://raw.githubusercontent.com/john-smith-matter/vpn_conf/refs/heads/main/forbidden.yaml
-    path: ./rulesets/forbidden.yaml
 
 rules:
   ## cloudflare-dns
@@ -82,9 +77,6 @@ rules:
 
   ## IP测试
   - DOMAIN-SUFFIX,ifconfig.me,specified
-
-  ## 禁止访问
-  - RULE-SET,forbidden,default
   
   ## 直连
   - DOMAIN-SUFFIX,nubia.com,DIRECT
