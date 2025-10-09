@@ -68,8 +68,6 @@ rule-providers:
 rules:
   ## cloudflare-dns
   - DOMAIN,cloudflare-dns.com,default
-  - IP-CIDR,1.1.1.1/32,default
-  - IP-CIDR,1.0.0.1/32,default
   ## github
   - DOMAIN-KEYWORD,github,default
     
