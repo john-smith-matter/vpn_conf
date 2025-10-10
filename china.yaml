@@ -5,3 +5,7 @@ payload:
   - DOMAIN-SUFFIX,redmagic.com
   - DOMAIN-SUFFIX,feishu.cn
   - DOMAIN-SUFFIX,baidu.com
+  - DOMAIN-SUFFIX,tencent.com
+  - DOMAIN-SUFFIX,qq.com
+  - DOMAIN-SUFFIX,alicdn.com
+  - DOMAIN-SUFFIX,taobao.com
