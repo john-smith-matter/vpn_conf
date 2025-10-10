@@ -1,11 +1,17 @@
 payload:
+  ## nubia
   - DOMAIN-SUFFIX,nubia.com
   - DOMAIN-SUFFIX,nubia.cn
   - DOMAIN-SUFFIX,zte.com.cn
   - DOMAIN-SUFFIX,redmagic.com
+  ## bytedance
   - DOMAIN-SUFFIX,feishu.cn
+  - DOMAIN-SUFFIX,coze.cn
+  ## baidu
   - DOMAIN-SUFFIX,baidu.com
+  ## tencent
   - DOMAIN-SUFFIX,tencent.com
   - DOMAIN-SUFFIX,qq.com
+  ## alibaba
   - DOMAIN-SUFFIX,alicdn.com
   - DOMAIN-SUFFIX,taobao.com
