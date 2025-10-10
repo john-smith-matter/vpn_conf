@@ -2,13 +2,6 @@ mixed-port: 7890
 mode: rule
 external-controller: 127.0.0.1:9090
 
-# geoip设置
-geodata-mode: false
-geox-url:
-  mmdb: "https://github.com/MetaCubeX/meta-rules-dat/releases/latest/download/country-lite.mmdb"
-etag-support: true
-global-ua: clash.meta
-
 dns:
   enable: true
   listen: 127.0.0.1:53
