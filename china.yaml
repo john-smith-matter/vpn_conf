@@ -15,3 +15,5 @@ payload:
   ## alibaba
   - DOMAIN-SUFFIX,alicdn.com
   - DOMAIN-SUFFIX,taobao.com
+  ## jd
+  - DOMAIN-SUFFIX,jd.com
