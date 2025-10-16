@@ -6,12 +6,9 @@ dns:
   enable: true
   listen: 127.0.0.1:53
   ipv6: false
-  dns-direct-nameserver:
-    - 1.1.1.1
-    - 1.0.0.1
+  dns-direct-nameserver: system
   proxy-server-nameserver:
-    - 1.1.1.1
-    - 1.0.0.1
+    - 8.8.8.8
   nameserver:
     - https://1.1.1.1/dns-query#default
     - https://1.0.0.1/dns-query#default
