@@ -5,8 +5,9 @@ payload:
   - DOMAIN-SUFFIX,zte.com.cn
   - DOMAIN-SUFFIX,redmagic.com
   ## bytedance
-  - DOMAIN-SUFFIX,feishu.cn
+  - DOMAIN-KEYWORD,feishu
   - DOMAIN-SUFFIX,coze.cn
+  - DOMAIN-KEYWORD,bytedance
   ## baidu
   - DOMAIN-SUFFIX,baidu.com
   ## tencent
