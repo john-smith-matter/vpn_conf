@@ -63,8 +63,6 @@ rule-providers:
     interval: 86400
 
 rules:
-  ## cloudflare-dns
-  - DOMAIN,cloudflare-dns.com,default
   ## github
   - DOMAIN-KEYWORD,github,default
     
