@@ -42,21 +42,25 @@ rule-providers:
     behavior: classical
     url: https://raw.githubusercontent.com/john-smith-matter/vpn_conf/refs/heads/main/youtube_api.yaml
     path: ./rulesets/youtube_api.yaml
+    interval: 86400
   youtube_cdn:
     type: http
     behavior: classical
     url: https://raw.githubusercontent.com/john-smith-matter/vpn_conf/refs/heads/main/youtube_cdn.yaml
     path: ./rulesets/youtube_cdn.yaml
+    interval: 86400
   microsoft:
     type: http
     behavior: classical
     url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Microsoft/Microsoft.yaml
     path: ./rulesets/microsoft.yaml
+    interval: 86400
   china:
     type: http
     behavior: classical
     url: https://raw.githubusercontent.com/john-smith-matter/vpn_conf/refs/heads/main/china.yaml
     path: ./rulesets/china.yaml
+    interval: 86400
 
 rules:
   ## cloudflare-dns
