@@ -6,7 +6,7 @@ dns:
   enable: true
   listen: 127.0.0.1:53
   ipv6: false
-  dns-direct-nameserver: system
+  dns-direct-nameserver: 8.8.8.8
   proxy-server-nameserver:
     - 8.8.8.8
   nameserver:
