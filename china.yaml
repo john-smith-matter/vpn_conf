@@ -8,6 +8,10 @@ payload:
   - DOMAIN-KEYWORD,feishu
   - DOMAIN-SUFFIX,coze.cn
   - DOMAIN-KEYWORD,bytedance
+  - DOMAIN-SUFFIX,byteoversea.com
+  - DOMAIN-SUFFIX,larkoffice.com
+  - DOMAIN-SUFFIX,feishucdn.com
+  - DOMAIN-SUFFIX,ibytedapm.com
   ## baidu
   - DOMAIN-SUFFIX,baidu.com
   ## tencent
