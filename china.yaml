@@ -1,5 +1,6 @@
 payload:
   - DOMAIN-SUFFIX,cn
+  - GEOIP,cn
   ## nubia
   - DOMAIN-SUFFIX,nubia.com
   - DOMAIN-SUFFIX,nubia.cn
