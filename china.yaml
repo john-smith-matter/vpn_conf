@@ -1,4 +1,6 @@
 payload:
+  - DOMAIN-SUFFIX,cn
+  - GEOIP,cn
   ## nubia
   - DOMAIN-SUFFIX,nubia.com
   - DOMAIN-SUFFIX,nubia.cn
@@ -20,7 +22,15 @@ payload:
   ## alibaba
   - DOMAIN-SUFFIX,alicdn.com
   - DOMAIN-SUFFIX,taobao.com
-  ## jd
+  ## 其他
   - DOMAIN-SUFFIX,jd.com
+  
+  - DOMAIN-SUFFIX,amap.com
+  - DOMAIN-SUFFIX,163.com
+  - DOMAIN-SUFFIX,cmbchina.com
+  - DOMAIN-SUFFIX,bdimg.com
+  
+  
+
 
   - DOMAIN-SUFFIX,tianyancha.com
