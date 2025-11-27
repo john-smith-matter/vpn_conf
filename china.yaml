@@ -24,13 +24,8 @@ payload:
   - DOMAIN-SUFFIX,taobao.com
   ## 其他
   - DOMAIN-SUFFIX,jd.com
-  
   - DOMAIN-SUFFIX,amap.com
   - DOMAIN-SUFFIX,163.com
   - DOMAIN-SUFFIX,cmbchina.com
   - DOMAIN-SUFFIX,bdimg.com
-  
-  
-
-
   - DOMAIN-SUFFIX,tianyancha.com
