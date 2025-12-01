@@ -19,6 +19,8 @@ payload:
   ## tencent
   - DOMAIN-SUFFIX,tencent.com
   - DOMAIN-SUFFIX,qq.com
+  - DOMAIN-KEYWORD,wechat
+  - DOMAIN-KEYWORD,weixin
   ## alibaba
   - DOMAIN-SUFFIX,alicdn.com
   - DOMAIN-SUFFIX,taobao.com
