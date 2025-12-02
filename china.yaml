@@ -22,6 +22,8 @@ payload:
   - DOMAIN-KEYWORD,wechat
   - DOMAIN-SUFFIX,weixin.com
   - DOMAIN-SUFFIX,tencent-cloud.net
+  - DOMAIN-SUFFIX,gtimg.com
+  - DOMAIN-SUFFIX,gtimg.cn
   ## alibaba
   - DOMAIN-SUFFIX,alicdn.com
   - DOMAIN-SUFFIX,taobao.com
