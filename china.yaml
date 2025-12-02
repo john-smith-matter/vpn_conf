@@ -20,10 +20,12 @@ payload:
   - DOMAIN-SUFFIX,tencent.com
   - DOMAIN-SUFFIX,qq.com
   - DOMAIN-KEYWORD,wechat
-  - DOMAIN-KEYWORD,weixin
+  - DOMAIN-SUFFIX,weixin.com
+  - DOMAIN-SUFFIX,tencent-cloud.net
   ## alibaba
   - DOMAIN-SUFFIX,alicdn.com
   - DOMAIN-SUFFIX,taobao.com
+  - DOMAIN-SUFFIX,aliyuncs.com
   ## 其他
   - DOMAIN-SUFFIX,jd.com
   - DOMAIN-SUFFIX,amap.com
@@ -31,3 +33,4 @@ payload:
   - DOMAIN-SUFFIX,cmbchina.com
   - DOMAIN-SUFFIX,bdimg.com
   - DOMAIN-SUFFIX,tianyancha.com
+  - DOMAIN-SUFFIX,10086.cn
