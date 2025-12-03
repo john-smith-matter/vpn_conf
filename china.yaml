@@ -16,6 +16,7 @@ payload:
   - DOMAIN-SUFFIX,larkoffice.com # Lark飞书国际版
   - DOMAIN-SUFFIX,feishucdn.com # 飞书CDN
   - DOMAIN-SUFFIX,ibytedapm.com # 字节APM监控
+  - USER-AGENT,*Feishu* # 飞书客户端
   
   ## baidu - 百度
   - DOMAIN-SUFFIX,baidu.com # 百度搜索
@@ -93,6 +94,7 @@ payload:
   - DOMAIN-SUFFIX,xiami.com # 虾米音乐
   - DOMAIN-SUFFIX,xiami.net # 虾米音乐
   - DOMAIN-SUFFIX,alidayu.com # 阿里大鱼短信服务
+  - USER-AGENT,*AlipayClient* # 支付宝客户端
 
   ## 其他
   - DOMAIN-SUFFIX,jd.com # 京东商城
