@@ -1,6 +1,6 @@
 payload:
-  - DOMAIN-SUFFIX,cn
-  - GEOIP,cn
+  - DOMAIN-SUFFIX,cn # 中国域名
+  - GEOIP,cn # 中国IP地址
 
   ## nubia - 努比亚手机
   - DOMAIN-SUFFIX,nubia.com # 努比亚官网
@@ -27,7 +27,6 @@ payload:
   - DOMAIN-KEYWORD,wechat # 微信
   - DOMAIN-SUFFIX,weixin.com # 微信官网
   - DOMAIN-SUFFIX,weixinbridge.com # 微信桥接
-  - DOMAIN-SUFFIX,wechat.com # 微信
   - DOMAIN-SUFFIX,servicewechat.com # 微信小程序
   - DOMAIN-SUFFIX,weiyun.com # 微云
   - DOMAIN-SUFFIX,tencent-cloud.net # 腾讯云
@@ -46,11 +45,12 @@ payload:
   - DOMAIN-SUFFIX,qqmail.com # QQ邮箱
   - DOMAIN-SUFFIX,wegame.com # WeGame游戏平台
   - DOMAIN-SUFFIX,wegame.com.cn # WeGame游戏平台
-  - DOMAIN-SUFFIX,foxmail.com # Foxmail邮箱
   - DOMAIN-SUFFIX,dnspod.cn # DNSPod
   - DOMAIN-SUFFIX,dnspod.com # DNSPod
   - DOMAIN-SUFFIX,tencentmusic.com # 腾讯音乐
   - DOMAIN-SUFFIX,imqq.com # QQ即时通讯
+  - DOMAIN-SUFFIX,tenpay.com # 财付通支付
+  - USER-AGENT,*MicroMessenger* # 微信客户端
   
   ## alibaba - 阿里巴巴
   - DOMAIN-SUFFIX,alibaba.com # 阿里巴巴
@@ -92,7 +92,7 @@ payload:
   - DOMAIN-SUFFIX,etao.com # 一淘
   - DOMAIN-SUFFIX,xiami.com # 虾米音乐
   - DOMAIN-SUFFIX,xiami.net # 虾米音乐
-  - DOMAIN-SUFFIX,alidayu.com # 阿里大鱼
+  - DOMAIN-SUFFIX,alidayu.com # 阿里大鱼短信服务
 
   ## 其他
   - DOMAIN-SUFFIX,jd.com # 京东商城
