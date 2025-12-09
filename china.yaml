@@ -80,6 +80,7 @@ payload:
   - DOMAIN-SUFFIX,antgroup.com # 蚂蚁集团
   - DOMAIN-SUFFIX,ele.me # 饿了么
   - DOMAIN-SUFFIX,elemecdn.com # 饿了么CDN
+  - DOMAIN-SUFFIX,meishichina.com #美食中国
   - DOMAIN-SUFFIX,alikunlun.com # 阿里昆仑
   - DOMAIN-SUFFIX,tanx.com # 淘宝广告
   - DOMAIN-SUFFIX,mmstat.com # 阿里统计
