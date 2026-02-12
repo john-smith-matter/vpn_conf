@@ -63,6 +63,9 @@ rule-providers:
 rules:
   ## github
   - DOMAIN-KEYWORD,github,default
+
+  ## cloudflare
+  - DOMAIN-SUFFIX,cloudflare.com,default
     
   ## youtube
   - RULE-SET,youtube_cdn,default
