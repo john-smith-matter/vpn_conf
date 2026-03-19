@@ -17,13 +17,6 @@ dns:
   nameserver-policy:
     'rule-set:youtube_api':  https://1.1.1.1/dns-query#specified
 
-  proxies:
-    - name: "xxx"
-
-  proxy-groups:
-    - name: "default"
-    - name: "specified"
-
   # enhanced-mode: fake-ip
   # fake-ip-filter:
   #   - +.stun.*.*
@@ -37,6 +30,12 @@ dns:
   #   - "*.msftncsi.com"
   #   - "*.msftconnecttest.com"
   #   - WORKGROUP
+
+proxies: []
+
+proxy-groups:
+  - name: "default"
+  - name: "specified"
 
 rule-providers:
   youtube_api:
