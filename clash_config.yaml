@@ -17,6 +17,8 @@ dns:
   nameserver-policy:
     'rule-set:youtube_api':  https://1.1.1.1/dns-query#specified
 
+  enhanced-mode: redir-host
+
   # enhanced-mode: fake-ip
   # fake-ip-filter:
   #   - +.stun.*.*
