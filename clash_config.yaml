@@ -81,6 +81,9 @@ rules:
 
   ## IP测试
   - DOMAIN-SUFFIX,ifconfig.me,specified
+
+  ## notion
+  - DOMAIN-SUFFIX,notion.com,DIRECT
   
   ## 直连
   - DOMAIN-SUFFIX,krepus.com,DIRECT
