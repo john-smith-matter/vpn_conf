@@ -83,7 +83,7 @@ rules:
   - DOMAIN-SUFFIX,ifconfig.me,specified
 
   ## notion
-  - DOMAIN-SUFFIX,notion.com,DIRECT
+  - DOMAIN-SUFFIX,notion.com,default
   
   ## 直连
   - DOMAIN-SUFFIX,krepus.com,DIRECT
