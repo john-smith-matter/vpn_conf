@@ -83,7 +83,7 @@ rules:
   - DOMAIN-SUFFIX,ifconfig.me,specified
   
   ## 直连
-  - DOMAIN-SUFFIX,krepus.com,DIRECT
+  - DOMAIN-SUFFIX,krepus.com,default
   - RULE-SET,china,DIRECT
   - DOMAIN-SUFFIX,cn,DIRECT
   - GEOSITE,cn,DIRECT
