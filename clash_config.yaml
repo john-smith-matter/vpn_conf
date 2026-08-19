@@ -9,8 +9,8 @@ dns:
   proxy-server-nameserver:
     - https://dns.alidns.com/dns-query
   nameserver:
-    - https://1.1.1.1/dns-query#default
-    - https://1.0.0.1/dns-query#default
+    - https://1.1.1.1/dns-query
+    - https://1.0.0.1/dns-query
 
   nameserver-policy:
     'rule-set:youtube_api':  https://1.1.1.1/dns-query#specified
