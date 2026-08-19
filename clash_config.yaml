@@ -85,9 +85,7 @@ rules:
   
   ## 直连
   - RULE-SET,china,DIRECT
-  - DOMAIN-SUFFIX,cn,DIRECT
   - GEOSITE,cn,DIRECT
-  - GEOIP,cn,DIRECT
   - GEOIP,private,DIRECT,no-resolve
   
   ## 广告阻止
