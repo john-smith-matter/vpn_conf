@@ -105,3 +105,7 @@ payload:
   - DOMAIN-SUFFIX,bdimg.com # 百度图片CDN
   - DOMAIN-SUFFIX,tianyancha.com # 天眼查企业信息查询
   - DOMAIN-SUFFIX,10086.cn # 中国移动
+  - DOMAIN-SUFFIX,elongstatic.com 
+  - DOMAIN-SUFFIX,umetrip.com
+  - DOMAIN-KEYWORD,ctrip
+  - DOMAIN-SUFFIX,trip.com
