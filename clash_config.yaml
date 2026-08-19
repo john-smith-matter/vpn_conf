@@ -6,11 +6,12 @@ dns:
   enable: true
   listen: 127.0.0.1:53
   ipv6: false
+  direct-nameserver: system
   proxy-server-nameserver:
     - https://dns.alidns.com/dns-query
   nameserver:
-    - https://1.1.1.1/dns-query
-    - https://1.0.0.1/dns-query
+    - https://1.1.1.1/dns-query#default
+    - https://1.0.0.1/dns-query#default
 
   nameserver-policy:
     'rule-set:youtube_api':  https://1.1.1.1/dns-query#specified
