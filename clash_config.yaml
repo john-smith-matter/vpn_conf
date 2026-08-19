@@ -6,8 +6,6 @@ dns:
   enable: true
   listen: 127.0.0.1:53
   ipv6: false
-  direct-nameserver: 
-    - system
   proxy-server-nameserver:
     - https://dns.alidns.com/dns-query
   nameserver:
