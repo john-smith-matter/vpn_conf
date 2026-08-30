@@ -69,6 +69,9 @@ rules:
   ## github
   - DOMAIN-KEYWORD,github,default
 
+  ## chatgpt
+  - DOMAIN-KEYWORD,chatgpt,default
+
   ## cloudflare
   - DOMAIN-SUFFIX,cloudflare.com,default
     
