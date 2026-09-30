@@ -3,9 +3,10 @@
  *
  * 功能：
  * 1. 插入绑定“以太网 2”的 corp-direct 节点。
- * 2. 将企业域名 DNS 策略插入 nameserver-policy 最前面。
- * 3. 将企业域名路由规则插入 rules 最前面，
- *    强制通过 corp-direct（即“以太网 2”）出口。
+ * 2. 插入绑定 Tailscale 网口的 tailscale-direct 节点。
+ * 3. 将企业域名 DNS 策略插入 nameserver-policy 最前面。
+ * 4. 将企业域名和 Tailscale 虚拟 IP 路由规则插入 rules 最前面，
+ *    强制通过各自的专用直连代理出口。
  */
 
 const CORP_PROXY_NAME = "corp-direct";
@@ -18,6 +19,12 @@ const CORP_DOMAINS = [
   "+.zte.com.cn",
   "+.redmagic.com",
 ];
+
+const TAILSCALE_PROXY_NAME = "tailscale-direct";
+// 按实际的 Tailscale 网口名称修改。
+const TAILSCALE_INTERFACE = "Tailscale";
+const TAILSCALE_IPV4_CIDRS = ["100.64.0.0/10"];
+const TAILSCALE_IPV6_CIDRS = ["fd7a:115c:a1e0::/48"];
 
 /**
  * nameserver-policy 使用 "+.example.com"
@@ -33,7 +40,7 @@ function main(config) {
   }
 
   /*
-   * 一、插入 corp-direct 代理
+   * 一、插入专用直连代理
    */
 
   if (!Array.isArray(config.proxies)) {
@@ -42,7 +49,10 @@ function main(config) {
 
   // 删除订阅或 Merge 中可能已经存在的同名节点，避免重名。
   const otherProxies = config.proxies.filter(function (proxy) {
-    return !proxy || proxy.name !== CORP_PROXY_NAME;
+    return (
+      !proxy ||
+      (proxy.name !== CORP_PROXY_NAME && proxy.name !== TAILSCALE_PROXY_NAME)
+    );
   });
 
   const corpDirect = {
@@ -52,8 +62,15 @@ function main(config) {
     "interface-name": CORP_INTERFACE,
   };
 
+  const tailscaleDirect = {
+    name: TAILSCALE_PROXY_NAME,
+    type: "direct",
+    udp: true,
+    "interface-name": TAILSCALE_INTERFACE,
+  };
+
   // 放在代理列表最前面。
-  config.proxies = [corpDirect].concat(otherProxies);
+  config.proxies = [corpDirect, tailscaleDirect].concat(otherProxies);
 
   /*
    * 二、插入企业域名 DNS 策略
@@ -92,7 +109,7 @@ function main(config) {
   config.dns["nameserver-policy"] = newPolicy;
 
   /*
-   * 三、插入企业域名路由规则
+   * 三、插入企业域名和 Tailscale 路由规则
    */
 
   if (!Array.isArray(config.rules)) {
@@ -105,10 +122,19 @@ function main(config) {
     return `DOMAIN-SUFFIX,${domain},${CORP_PROXY_NAME}`;
   });
 
+  const tailscaleRules = TAILSCALE_IPV4_CIDRS.map(function (cidr) {
+    return `IP-CIDR,${cidr},${TAILSCALE_PROXY_NAME},no-resolve`;
+  }).concat(
+    TAILSCALE_IPV6_CIDRS.map(function (cidr) {
+      return `IP-CIDR6,${cidr},${TAILSCALE_PROXY_NAME},no-resolve`;
+    }),
+  );
+
   /*
    * 如果脚本被重复执行，去掉之前生成的同样规则。
    *
    * 只删除目标为 corp-direct 的同域名规则，
+   * 以及目标为 tailscale-direct 的同网段规则，
    * 不修改订阅自身可能存在的其它规则。
    */
   const otherRules = config.rules.filter(function (rule) {
@@ -125,14 +151,21 @@ function main(config) {
     }
 
     const type = parts[0].toUpperCase();
-    const domain = parts[1].toLowerCase();
+    const value = parts[1].toLowerCase();
     const target = parts[2];
 
-    return !(
+    const isCorpRule =
       type === "DOMAIN-SUFFIX" &&
-      corpRuleDomains.indexOf(domain) !== -1 &&
-      target === CORP_PROXY_NAME
-    );
+      corpRuleDomains.indexOf(value) !== -1 &&
+      target === CORP_PROXY_NAME;
+
+    const isTailscaleRule =
+      ((type === "IP-CIDR" && TAILSCALE_IPV4_CIDRS.indexOf(value) !== -1) ||
+        (type === "IP-CIDR6" &&
+          TAILSCALE_IPV6_CIDRS.indexOf(value) !== -1)) &&
+      target === TAILSCALE_PROXY_NAME;
+
+    return !(isCorpRule || isTailscaleRule);
   });
 
   /*
@@ -144,9 +177,9 @@ function main(config) {
    *   GEOIP,CN,DIRECT
    *   MATCH,某代理
    *
-   * 企业域名仍会首先命中 corp-direct。
+   * 企业域名和 Tailscale 虚拟 IP 仍会首先命中对应的专用直连代理。
    */
-  config.rules = corpRules.concat(otherRules);
+  config.rules = tailscaleRules.concat(corpRules, otherRules);
 
   return config;
 }
