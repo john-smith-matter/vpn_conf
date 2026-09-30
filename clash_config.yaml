@@ -25,8 +25,8 @@ dns:
   enhanced-mode: redir-host
 
   proxy-server-nameserver:
-    - 'https://223.5.5.5/dns-query#DIRECT'
-    - 'https://doh.pub/dns-query#DIRECT'
+    - 'https://223.5.5.5/dns-query'
+    - 'https://doh.pub/dns-query'
 
   # DIRECT 连接使用境内 DNS 重解析，避免经代理获得的境外 CDN 地址被直接连接。
   direct-nameserver:
@@ -40,47 +40,47 @@ dns:
 
   nameserver-policy:
     'rule-set:china':
-      - 'https://223.5.5.5/dns-query#DIRECT'
-      - 'https://doh.pub/dns-query#DIRECT'
+      - 'https://223.5.5.5/dns-query'
+      - 'https://doh.pub/dns-query'
     'geosite:cn':
-      - 'https://223.5.5.5/dns-query#DIRECT'
-      - 'https://doh.pub/dns-query#DIRECT'
+      - 'https://223.5.5.5/dns-query'
+      - 'https://doh.pub/dns-query'
     '+.cn':
-      - 'https://223.5.5.5/dns-query#DIRECT'
-      - 'https://doh.pub/dns-query#DIRECT'
+      - 'https://223.5.5.5/dns-query'
+      - 'https://doh.pub/dns-query'
 
   # 当前仍使用 redir-host；切换为 fake-ip 后，以下过滤规则会自动生效。
   # enhanced-mode: fake-ip
-  fake-ip-filter-mode: blacklist
-  fake-ip-filter:
-    # Tailscale MagicDNS 必须返回真实的 tailnet IP，控制面和 DERP 也不应获得 fake IP。
-    - +.ts.net
-    - +.tailscale.com
+  # fake-ip-filter-mode: blacklist
+  # fake-ip-filter:
+  #   # Tailscale MagicDNS 必须返回真实的 tailnet IP，控制面和 DERP 也不应获得 fake IP。
+  #   - +.ts.net
+  #   - +.tailscale.com
 
-    # 局域网、mDNS、反向解析等名称依赖本地或专用 DNS。
-    - +.lan
-    - +.local
-    - +.localhost
-    - +.home.arpa
-    - +.arpa
-    - WORKGROUP
+  #   # 局域网、mDNS、反向解析等名称依赖本地或专用 DNS。
+  #   - +.lan
+  #   - +.local
+  #   - +.localhost
+  #   - +.home.arpa
+  #   - +.arpa
+  #   - WORKGROUP
 
-    # STUN/ICE 和游戏联机需要在应用层拿到真实地址。
-    - +.stun.*.*
-    - +.stun.*.*.*
-    - +.stun.*.*.*.*
-    - +.stun.*.*.*.*.*
-    - "*.n.n.srv.nintendo.net"
-    - +.stun.playstation.net
-    - xbox.*.*.microsoft.com
-    - +.xboxlive.com
+  #   # STUN/ICE 和游戏联机需要在应用层拿到真实地址。
+  #   - +.stun.*.*
+  #   - +.stun.*.*.*
+  #   - +.stun.*.*.*.*
+  #   - +.stun.*.*.*.*.*
+  #   - "*.n.n.srv.nintendo.net"
+  #   - +.stun.playstation.net
+  #   - xbox.*.*.microsoft.com
+  #   - +.xboxlive.com
 
-    # 网络连通性检测和校时不适合返回 fake IP。
-    - geosite:connectivity-check
-    - time.*.com
-    - time.*.*.com
-    - ntp.*.com
-    - +.pool.ntp.org
+  #   # 网络连通性检测和校时不适合返回 fake IP。
+  #   - geosite:connectivity-check
+  #   - time.*.com
+  #   - time.*.*.com
+  #   - ntp.*.com
+  #   - +.pool.ntp.org
 
 proxies: []
 
