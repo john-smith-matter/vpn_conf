@@ -4,7 +4,7 @@
  * 功能：
  * 1. 插入绑定“以太网 2”的 corp-direct 节点。
  * 2. 插入绑定 Tailscale 网口的 tailscale-direct 节点。
- * 3. 将企业域名 DNS 策略插入 nameserver-policy 最前面。
+ * 3. 将 Tailscale 和企业域名 DNS 策略插入 nameserver-policy 最前面。
  * 4. 将企业域名和 Tailscale 虚拟 IP 路由规则插入 rules 最前面，
  *    强制通过各自的专用直连代理出口。
  */
@@ -23,6 +23,8 @@ const CORP_DOMAINS = [
 const TAILSCALE_PROXY_NAME = "tailscale-direct";
 // 按实际的 Tailscale 网口名称修改。
 const TAILSCALE_INTERFACE = "Tailscale";
+const TAILSCALE_DNS_DOMAIN = "+.ts.net";
+const TAILSCALE_DNS = "100.100.100.100";
 const TAILSCALE_IPV4_CIDRS = ["100.64.0.0/10"];
 const TAILSCALE_IPV6_CIDRS = ["fd7a:115c:a1e0::/48"];
 
@@ -73,7 +75,7 @@ function main(config) {
   config.proxies = [corpDirect, tailscaleDirect].concat(otherProxies);
 
   /*
-   * 二、插入企业域名 DNS 策略
+   * 二、插入 Tailscale 和企业域名 DNS 策略
    */
 
   if (
@@ -93,6 +95,10 @@ function main(config) {
 
   const newPolicy = {};
 
+  // 必须位于 nameserver-policy 第一位；若旧策略中已有该项，
+  // 同时以这里指定的 MagicDNS 地址覆盖它。
+  newPolicy[TAILSCALE_DNS_DOMAIN] = TAILSCALE_DNS;
+
   // 企业域名优先使用企业 DNS，
   // DNS 请求自身通过 corp-direct / 以太网 2 发出。
   CORP_DOMAINS.forEach(function (domain) {
@@ -101,7 +107,7 @@ function main(config) {
 
   // 追加订阅中的其他 DNS 策略。
   Object.keys(oldPolicy).forEach(function (key) {
-    if (CORP_DOMAINS.indexOf(key) === -1) {
+    if (key !== TAILSCALE_DNS_DOMAIN && CORP_DOMAINS.indexOf(key) === -1) {
       newPolicy[key] = oldPolicy[key];
     }
   });
