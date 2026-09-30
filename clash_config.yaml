@@ -70,6 +70,8 @@ dns:
   #   - ntp.*.com
   #   - +.pool.ntp.org
 
+proxies: []
+
 rule-providers:
   youtube_api:
     type: http
