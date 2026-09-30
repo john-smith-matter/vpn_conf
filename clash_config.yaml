@@ -24,12 +24,14 @@ dns:
   ipv6: true
   enhanced-mode: redir-host
 
-  proxy-server-nameserver: https://223.5.5.5/dns-query
-  direct-nameserver: https://223.5.5.5/dns-query
+  proxy-server-nameserver: 
+    - https://223.5.5.5/dns-query
+  direct-nameserver: 
+    - https://223.5.5.5/dns-query
   nameserver:
-    - https://1.1.1.1/dns-query#default
-    - https://8.8.8.8/dns-query#default
-    
+    - https://1.1.1.1/dns-query
+    - https://8.8.8.8/dns-query
+
   nameserver-policy:
     'rule-set:china': https://223.5.5.5/dns-query
     'geosite:cn': https://223.5.5.5/dns-query
@@ -68,12 +70,6 @@ dns:
   #   - ntp.*.com
   #   - +.pool.ntp.org
 
-proxies: []
-
-proxy-groups:
-  - name: "default"
-  - name: "specified"
-
 rule-providers:
   youtube_api:
     type: http
@@ -102,23 +98,23 @@ rule-providers:
 
 rules:
   ## github
-  - DOMAIN-KEYWORD,github,default
+  - DOMAIN-KEYWORD,github,PROXY
 
   ## chatgpt
-  - DOMAIN-KEYWORD,chatgpt,default
+  - DOMAIN-KEYWORD,chatgpt,PROXY
 
   ## cloudflare
-  - DOMAIN-SUFFIX,cloudflare.com,default
+  - DOMAIN-SUFFIX,cloudflare.com,PROXY
     
   ## youtube
-  - RULE-SET,youtube_cdn,default
-  - RULE-SET,youtube_api,specified
+  - RULE-SET,youtube_cdn,PROXY
+  - RULE-SET,youtube_api,PROXY
 
   ## microsoft
-  - RULE-SET,microsoft,default
+  - RULE-SET,microsoft,PROXY
 
   ## IP测试
-  - DOMAIN-SUFFIX,ifconfig.me,specified
+  - DOMAIN-SUFFIX,ifconfig.me,PROXY
   
   ## 直连
   - RULE-SET,china,DIRECT
