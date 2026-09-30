@@ -2,12 +2,16 @@
  * Clash Verge Rev 订阅扩展脚本
  *
  * 功能：
- * 1. 插入绑定“以太网 2”的 corp-direct 节点。
- * 2. 插入绑定 Tailscale 网口的 tailscale-direct 节点。
- * 3. 将 Tailscale 和企业域名 DNS 策略插入 nameserver-policy 最前面。
- * 4. 将企业域名和 Tailscale 虚拟 IP 路由规则插入 rules 最前面，
+ * 1. 开启 TUN 时禁用出口网口自动检测，并指定全局出口网口。
+ * 2. 插入绑定“以太网 2”的 corp-direct 节点。
+ * 3. 插入绑定 Tailscale 网口的 tailscale-direct 节点。
+ * 4. 将 Tailscale 和企业域名 DNS 策略插入 nameserver-policy 最前面。
+ * 5. 将企业域名和 Tailscale 虚拟 IP 路由规则插入 rules 最前面，
  *    强制通过各自的专用直连代理出口。
  */
+
+// TUN 模式下的全局出口网口，按实际网口名称修改。
+const GLOBAL_INTERFACE = "WLAN";
 
 const CORP_PROXY_NAME = "corp-direct";
 const CORP_INTERFACE = "以太网 2";
@@ -42,7 +46,21 @@ function main(config) {
   }
 
   /*
-   * 一、插入专用直连代理
+   * 一、配置 TUN 的全局出口网口
+   */
+
+  if (
+    config.tun &&
+    typeof config.tun === "object" &&
+    !Array.isArray(config.tun) &&
+    config.tun.enable === true
+  ) {
+    config.tun["auto-detect-interface"] = false;
+    config["interface-name"] = GLOBAL_INTERFACE;
+  }
+
+  /*
+   * 二、插入专用直连代理
    */
 
   if (!Array.isArray(config.proxies)) {
@@ -75,7 +93,7 @@ function main(config) {
   config.proxies = [corpDirect, tailscaleDirect].concat(otherProxies);
 
   /*
-   * 二、插入 Tailscale 和企业域名 DNS 策略
+   * 三、插入 Tailscale 和企业域名 DNS 策略
    */
 
   if (
@@ -115,7 +133,7 @@ function main(config) {
   config.dns["nameserver-policy"] = newPolicy;
 
   /*
-   * 三、插入企业域名和 Tailscale 路由规则
+   * 四、插入企业域名和 Tailscale 路由规则
    */
 
   if (!Array.isArray(config.rules)) {
