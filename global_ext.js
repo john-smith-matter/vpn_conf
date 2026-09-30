@@ -2,7 +2,8 @@
  * Clash Verge Rev 订阅扩展脚本
  *
  * 功能：
- * 1. 开启 TUN 时禁用出口网口自动检测，并指定全局出口网口。
+ * 1. 开启 TUN 时显式配置路由地址，禁用出口网口自动检测，
+ *    并指定全局出口网口。
  * 2. 插入绑定“以太网 2”的 corp-direct 节点。
  * 3. 插入绑定 Tailscale 网口的 tailscale-direct 节点。
  * 4. 将 Tailscale 和企业域名 DNS 策略插入 nameserver-policy 最前面。
@@ -55,6 +56,12 @@ function main(config) {
     !Array.isArray(config.tun) &&
     config.tun.enable === true
   ) {
+    config.tun["route-address"] = [
+      "0.0.0.0/1",
+      "128.0.0.0/1",
+      "::/1",
+      "8000::/1",
+    ];
     config.tun["auto-detect-interface"] = false;
     config["interface-name"] = GLOBAL_INTERFACE;
   }
