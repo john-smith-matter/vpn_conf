@@ -56,12 +56,15 @@ function main(config) {
     !Array.isArray(config.tun) &&
     config.tun.enable === true
   ) {
+    // 将默认路由拆分为两条，避免被Tailscale magicsock 绑定网
     config.tun["route-address"] = [
       "0.0.0.0/1",
       "128.0.0.0/1",
       "::/1",
       "8000::/1",
     ];
+    
+    // 指定默认出口网口，避免选中错误的网口，例如其他app创建的虚拟网口
     config.tun["auto-detect-interface"] = false;
     config["interface-name"] = GLOBAL_INTERFACE;
   }
