@@ -1,219 +1,234 @@
 /**
  * Clash Verge Rev 订阅扩展脚本
  *
- * 功能：
- * 1. 开启 TUN 时显式配置路由地址，禁用出口网口自动检测，
- *    并指定全局出口网口。
- * 2. 插入绑定“以太网 2”的 corp-direct 节点。
- * 3. 插入绑定 Tailscale 网口的 tailscale-direct 节点。
- * 4. 将 Tailscale 和企业域名 DNS 策略插入 nameserver-policy 最前面。
- * 5. 将企业域名和 Tailscale 虚拟 IP 路由规则插入 rules 最前面，
- *    强制通过各自的专用直连代理出口。
+ * 从 x-specific-targets 读取需要使用指定网口的目标，例如：
+ *
+ * x-specific-targets:
+ *   tailscale-direct:
+ *     domains: ["+.ts.net"]
+ *     ip-cidrs: ["100.64.0.0/10", "fd7a:115c:a1e0::/48"]
+ *     dns: 100.100.100.100
+ *     interface-name: Tailscale
+ *
+ * 每个目标会生成一个同名 direct 代理，并为其域名和 IP 网段生成
+ * 优先路由规则。配置了 dns 时，还会自动附加目标代理名，
+ * 并为该目标的域名生成 DNS 策略。
  */
 
-// TUN 模式下的全局出口网口，按实际网口名称修改。
-const GLOBAL_INTERFACE = "WLAN";
+const SPECIFIC_TARGETS_FIELD = "x-specific-targets";
 
-const CORP_PROXY_NAME = "corp-direct";
-const CORP_INTERFACE = "以太网 2";
-const CORP_DNS = "udp://10.206.2.5#corp-direct";
+function isObject(value) {
+  return value && typeof value === "object" && !Array.isArray(value);
+}
 
-const CORP_DOMAINS = [
-  "+.nubia.cn",
-  "+.nubia.com",
-  "+.zte.com.cn",
-  "+.redmagic.com",
-];
+function stringList(value) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
 
-const TAILSCALE_PROXY_NAME = "tailscale-direct";
-// 按实际的 Tailscale 网口名称修改。
-const TAILSCALE_INTERFACE = "Tailscale";
-const TAILSCALE_DNS_DOMAIN = "+.ts.net";
-const TAILSCALE_DNS = "100.100.100.100";
-const TAILSCALE_IPV4_CIDRS = ["100.64.0.0/10"];
-const TAILSCALE_IPV6_CIDRS = ["fd7a:115c:a1e0::/48"];
+  return value
+    .filter(function (item) {
+      return typeof item === "string" && item.trim() !== "";
+    })
+    .map(function (item) {
+      return item.trim();
+    });
+}
+
+function addProxyToDnsServer(server, targetName) {
+  const normalizedServer = server.trim();
+
+  if (normalizedServer === "") {
+    return null;
+  }
+
+  const separator = normalizedServer.indexOf("#") === -1 ? "#" : "&";
+  return `${normalizedServer}${separator}${targetName}`;
+}
+
+function addProxyToDns(dns, targetName) {
+  if (typeof dns === "string") {
+    return addProxyToDnsServer(dns, targetName);
+  }
+
+  if (Array.isArray(dns)) {
+    return dns
+      .filter(function (server) {
+        return typeof server === "string";
+      })
+      .map(function (server) {
+        return addProxyToDnsServer(server, targetName);
+      })
+      .filter(function (server) {
+        return server !== null;
+      });
+  }
+
+  return null;
+}
+
+function readSpecificTargets(config) {
+  const rawTargets = config[SPECIFIC_TARGETS_FIELD];
+
+  if (!isObject(rawTargets)) {
+    return [];
+  }
+
+  return Object.keys(rawTargets)
+    .map(function (name) {
+      const rawTarget = rawTargets[name];
+
+      if (!isObject(rawTarget) || name.trim() === "") {
+        return null;
+      }
+
+      const interfaceName = rawTarget["interface-name"];
+
+      if (typeof interfaceName !== "string" || interfaceName.trim() === "") {
+        return null;
+      }
+
+      const targetName = name.trim();
+
+      return {
+        name: targetName,
+        domains: stringList(rawTarget.domains),
+        ipCidrs: stringList(rawTarget["ip-cidrs"]),
+        dns: addProxyToDns(rawTarget.dns, targetName),
+        interfaceName: interfaceName.trim(),
+      };
+    })
+    .filter(function (target) {
+      return target !== null;
+    });
+}
 
 /**
- * nameserver-policy 使用 "+.example.com"
- * rules 使用 "DOMAIN-SUFFIX,example.com,..."
+ * nameserver-policy 使用 "+.example.com"，
+ * rules 使用 "DOMAIN-SUFFIX,example.com,..."。
  */
 function toRuleDomain(domain) {
   return domain.replace(/^\+\./, "").replace(/^\./, "");
 }
 
+function makeRules(target) {
+  const domainRules = target.domains.map(function (domain) {
+    return `DOMAIN-SUFFIX,${toRuleDomain(domain)},${target.name}`;
+  });
+
+  const ipRules = target.ipCidrs.map(function (cidr) {
+    const type = cidr.indexOf(":") === -1 ? "IP-CIDR" : "IP-CIDR6";
+    return `${type},${cidr},${target.name},no-resolve`;
+  });
+
+  return domainRules.concat(ipRules);
+}
+
 function main(config) {
-  if (!config || typeof config !== "object") {
+  if (!isObject(config)) {
+    return config;
+  }
+
+  const targets = readSpecificTargets(config);
+
+  if (targets.length === 0) {
     return config;
   }
 
   /*
-   * 一、配置 TUN 的全局出口网口
-   */
-
-  if (
-    config.tun &&
-    typeof config.tun === "object" &&
-    !Array.isArray(config.tun) &&
-    config.tun.enable === true
-  ) {
-    // 将默认路由拆分为两条，避免被Tailscale magicsock 绑定网
-    config.tun["route-address"] = [
-      "0.0.0.0/1",
-      "128.0.0.0/1",
-      "::/1",
-      "8000::/1",
-    ];
-    
-    // 指定默认出口网口，避免选中错误的网口，例如其他app创建的虚拟网口
-    config.tun["auto-detect-interface"] = false;
-    config["interface-name"] = GLOBAL_INTERFACE;
-  }
-
-  /*
-   * 二、插入专用直连代理
+   * 一、为每个目标插入绑定指定网口的 direct 代理
    */
 
   if (!Array.isArray(config.proxies)) {
     config.proxies = [];
   }
 
+  const targetNames = targets.map(function (target) {
+    return target.name;
+  });
+
   // 删除订阅或 Merge 中可能已经存在的同名节点，避免重名。
   const otherProxies = config.proxies.filter(function (proxy) {
+    return !proxy || targetNames.indexOf(proxy.name) === -1;
+  });
+
+  const targetProxies = targets.map(function (target) {
+    return {
+      name: target.name,
+      type: "direct",
+      udp: true,
+      "interface-name": target.interfaceName,
+    };
+  });
+
+  config.proxies = targetProxies.concat(otherProxies);
+
+  /*
+   * 二、为配置了 DNS 的目标插入域名解析策略
+   */
+
+  const dnsTargets = targets.filter(function (target) {
     return (
-      !proxy ||
-      (proxy.name !== CORP_PROXY_NAME && proxy.name !== TAILSCALE_PROXY_NAME)
+      target.domains.length > 0 &&
+      target.dns !== null &&
+      (!Array.isArray(target.dns) || target.dns.length > 0)
     );
   });
 
-  const corpDirect = {
-    name: CORP_PROXY_NAME,
-    type: "direct",
-    udp: true,
-    "interface-name": CORP_INTERFACE,
-  };
+  if (dnsTargets.length > 0) {
+    if (!isObject(config.dns)) {
+      config.dns = {};
+    }
 
-  const tailscaleDirect = {
-    name: TAILSCALE_PROXY_NAME,
-    type: "direct",
-    udp: true,
-    "interface-name": TAILSCALE_INTERFACE,
-  };
-
-  // 放在代理列表最前面。
-  config.proxies = [corpDirect, tailscaleDirect].concat(otherProxies);
-
-  /*
-   * 三、插入 Tailscale 和企业域名 DNS 策略
-   */
-
-  if (
-    !config.dns ||
-    typeof config.dns !== "object" ||
-    Array.isArray(config.dns)
-  ) {
-    config.dns = {};
-  }
-
-  const oldPolicy =
-    config.dns["nameserver-policy"] &&
-    typeof config.dns["nameserver-policy"] === "object" &&
-    !Array.isArray(config.dns["nameserver-policy"])
+    const oldPolicy = isObject(config.dns["nameserver-policy"])
       ? config.dns["nameserver-policy"]
       : {};
+    const newPolicy = {};
+    const targetDomains = [];
 
-  const newPolicy = {};
+    dnsTargets.forEach(function (target) {
+      target.domains.forEach(function (domain) {
+        newPolicy[domain] = target.dns;
+        targetDomains.push(domain);
+      });
+    });
 
-  // 必须位于 nameserver-policy 第一位；若旧策略中已有该项，
-  // 同时以这里指定的 MagicDNS 地址覆盖它。
-  newPolicy[TAILSCALE_DNS_DOMAIN] = TAILSCALE_DNS;
+    // 目标 DNS 策略放在最前，然后保留订阅中的其他策略。
+    Object.keys(oldPolicy).forEach(function (domain) {
+      if (targetDomains.indexOf(domain) === -1) {
+        newPolicy[domain] = oldPolicy[domain];
+      }
+    });
 
-  // 企业域名优先使用企业 DNS，
-  // DNS 请求自身通过 corp-direct / 以太网 2 发出。
-  CORP_DOMAINS.forEach(function (domain) {
-    newPolicy[domain] = CORP_DNS;
-  });
-
-  // 追加订阅中的其他 DNS 策略。
-  Object.keys(oldPolicy).forEach(function (key) {
-    if (key !== TAILSCALE_DNS_DOMAIN && CORP_DOMAINS.indexOf(key) === -1) {
-      newPolicy[key] = oldPolicy[key];
-    }
-  });
-
-  config.dns["nameserver-policy"] = newPolicy;
+    config.dns["nameserver-policy"] = newPolicy;
+  }
 
   /*
-   * 四、插入企业域名和 Tailscale 路由规则
+   * 三、为域名和 IP 网段插入优先路由规则
    */
 
   if (!Array.isArray(config.rules)) {
     config.rules = [];
   }
 
-  const corpRuleDomains = CORP_DOMAINS.map(toRuleDomain);
+  const targetRules = [];
 
-  const corpRules = corpRuleDomains.map(function (domain) {
-    return `DOMAIN-SUFFIX,${domain},${CORP_PROXY_NAME}`;
+  targets.forEach(function (target) {
+    Array.prototype.push.apply(targetRules, makeRules(target));
   });
 
-  const tailscaleRules = TAILSCALE_IPV4_CIDRS.map(function (cidr) {
-    return `IP-CIDR,${cidr},${TAILSCALE_PROXY_NAME},no-resolve`;
-  }).concat(
-    TAILSCALE_IPV6_CIDRS.map(function (cidr) {
-      return `IP-CIDR6,${cidr},${TAILSCALE_PROXY_NAME},no-resolve`;
-    }),
-  );
+  // 脚本重复执行时，删除上一次生成的同样规则。
+  const targetRuleSet = {};
+  targetRules.forEach(function (rule) {
+    targetRuleSet[rule] = true;
+  });
 
-  /*
-   * 如果脚本被重复执行，去掉之前生成的同样规则。
-   *
-   * 只删除目标为 corp-direct 的同域名规则，
-   * 以及目标为 tailscale-direct 的同网段规则，
-   * 不修改订阅自身可能存在的其它规则。
-   */
   const otherRules = config.rules.filter(function (rule) {
-    if (typeof rule !== "string") {
-      return true;
-    }
-
-    const parts = rule.split(",").map(function (part) {
-      return part.trim();
-    });
-
-    if (parts.length < 3) {
-      return true;
-    }
-
-    const type = parts[0].toUpperCase();
-    const value = parts[1].toLowerCase();
-    const target = parts[2];
-
-    const isCorpRule =
-      type === "DOMAIN-SUFFIX" &&
-      corpRuleDomains.indexOf(value) !== -1 &&
-      target === CORP_PROXY_NAME;
-
-    const isTailscaleRule =
-      ((type === "IP-CIDR" && TAILSCALE_IPV4_CIDRS.indexOf(value) !== -1) ||
-        (type === "IP-CIDR6" &&
-          TAILSCALE_IPV6_CIDRS.indexOf(value) !== -1)) &&
-      target === TAILSCALE_PROXY_NAME;
-
-    return !(isCorpRule || isTailscaleRule);
+    return typeof rule !== "string" || !targetRuleSet[rule];
   });
 
-  /*
-   * 必须放在订阅规则最前面。
-   *
-   * Mihomo rules 按顺序匹配，这样即使订阅中存在：
-   *
-   *   GEOSITE,CN,DIRECT
-   *   GEOIP,CN,DIRECT
-   *   MATCH,某代理
-   *
-   * 企业域名和 Tailscale 虚拟 IP 仍会首先命中对应的专用直连代理。
-   */
-  config.rules = tailscaleRules.concat(corpRules, otherRules);
+  // Mihomo rules 按顺序匹配，因此目标规则必须位于订阅规则之前。
+  config.rules = targetRules.concat(otherRules);
 
   return config;
 }
