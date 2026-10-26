@@ -64,10 +64,7 @@ proxy-providers:
 proxy-groups:
   - name: default
     type: select
-    use:
-      - usa
-    proxies:
-      - DIRECT
+    use: [usa]
 
 rules:
   ## github
