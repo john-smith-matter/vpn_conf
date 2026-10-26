@@ -59,7 +59,7 @@ rule-providers:
 proxy-providers:
   usa:
     type: file
-    path: ./proxy_providers/default_proxy.yaml
+    path: ./proxy_providers/usa.yaml
 
 proxy-groups:
   - name: default
