@@ -63,7 +63,7 @@ proxy-providers:
 
 proxy-groups:
   - name: default
-    type: select
+    type: fallback
     use: [usa]
 
 rules:
