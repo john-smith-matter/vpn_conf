@@ -56,11 +56,6 @@ rule-providers:
     path: ./rulesets/china.yaml
     interval: 86400
 
-proxy-providers:
-  usa:
-    type: file
-    path: ./proxy_providers/usa.yaml
-
 proxies:
   - name: InitDirect
     type: direct
