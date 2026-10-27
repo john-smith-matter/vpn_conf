@@ -65,6 +65,8 @@ proxy-groups:
   - name: default
     type: select
     use: [usa]
+    proxies:
+      - DIRECT
 
 rules:
   ## github
