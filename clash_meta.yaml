@@ -61,12 +61,12 @@ proxy-providers:
     type: file
     path: ./proxy_providers/usa.yaml
 
+proxies: []
+
 proxy-groups:
   - name: default
     type: select
     use: [usa]
-    proxies:
-      - DIRECT
 
 rules:
   ## github
