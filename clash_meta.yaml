@@ -61,7 +61,9 @@ proxy-providers:
     type: file
     path: ./proxy_providers/usa.yaml
 
-proxies: []
+proxies:
+  - name: InitDirect
+    type: direct
 
 proxy-groups:
   - name: default
