@@ -56,15 +56,15 @@ rule-providers:
     path: ./rulesets/china.yaml
     interval: 86400
 
-proxies:
-  - name: usa
-    type: direct
+proxy-providers:
+  usa:
+    type: file
+    path: ./usa.yaml
 
 proxy-groups:
   - name: default
     type: select
-    proxies: 
-      - usa
+    use: [usa]
 
 rules:
   ## github
