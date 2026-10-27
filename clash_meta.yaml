@@ -57,7 +57,7 @@ rule-providers:
     interval: 86400
 
 proxies:
-  - name: InitDirect
+  - name: usa
     type: direct
 
 proxy-groups:
