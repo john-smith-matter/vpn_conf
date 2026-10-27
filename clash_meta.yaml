@@ -63,7 +63,7 @@ proxies:
 proxy-groups:
   - name: default
     type: select
-    use: [usa]
+    proxies: [usa]
 
 rules:
   ## github
