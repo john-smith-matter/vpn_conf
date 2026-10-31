@@ -129,6 +129,15 @@ function main(config) {
     return config;
   }
 
+  // 所有代理统一使用 IPv6 优先，包括没有指定网口目标的情况。
+  if (Array.isArray(config.proxies)) {
+    config.proxies.forEach(function (proxy) {
+      if (isObject(proxy)) {
+        proxy.ip_version = "ipv6_prefer";
+      }
+    });
+  }
+
   const targets = readSpecificTargets(config);
 
   if (targets.length === 0) {
@@ -157,6 +166,7 @@ function main(config) {
       name: target.name,
       type: "direct",
       udp: true,
+      ip_version: "ipv6_prefer",
       "interface-name": target.interfaceName,
     };
   });
