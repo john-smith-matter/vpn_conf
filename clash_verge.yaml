@@ -1,4 +1,4 @@
-# Clash Verge Rev / Mihomo cloud profile; merge local nodes and a default proxy group.
+# Clash Verge Rev cloud profile. Local extensions supply nodes and replace default.
 mode: rule
 log-level: info
 ipv6: false
@@ -112,7 +112,14 @@ rule-providers:
     proxy: default
     interval: 86400
 
-# Local overrides supply nodes, proxy-providers and a usable default proxy group.
+# Self-contained for subscription validation; no local node file is required.
+# Replace these entries in Verge's local extension with real nodes/providers/groups.
+proxies: []
+proxy-providers: {}
+proxy-groups:
+  - name: default
+    type: select
+    proxies: [REJECT]
 
 rules:
   - RULE-SET,private,DIRECT

@@ -1,4 +1,4 @@
-# Mihomo cloud profile; merge local nodes and a default proxy group.
+# Complete Mihomo cloud profile. Nodes are read from the core's local ./usa.yaml.
 mode: rule
 log-level: info
 ipv6: false
@@ -110,7 +110,22 @@ rule-providers:
     proxy: default
     interval: 86400
 
-# Local overrides supply nodes, proxy-providers and a usable default proxy group.
+# File providers load nodes independently of client-side profile overrides.
+# ./usa.yaml is relative to Mihomo's data directory (-d), not this URL.
+proxy-providers:
+  usa:
+    type: file
+    path: ./usa.yaml
+    health-check:
+      enable: true
+      url: https://www.gstatic.com/generate_204
+      interval: 300
+
+proxy-groups:
+  - name: default
+    type: fallback
+    use: [usa]
+    empty-fallback: REJECT
 
 rules:
   - RULE-SET,private,DIRECT
