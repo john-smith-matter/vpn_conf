@@ -1,0 +1,8 @@
+# Shared hand-maintained ad rules. Place precise local allow rules before this set.
+# Public BitTorrent trackers are controlled by a separate upstream rule set.
+DOMAIN-SUFFIX,doubleclick.net
+DOMAIN-SUFFIX,googlesyndication.com
+DOMAIN-SUFFIX,googleadservices.com
+DOMAIN,adservice.google.com
+DOMAIN-SUFFIX,tanx.com
+DOMAIN-SUFFIX,mmstat.com

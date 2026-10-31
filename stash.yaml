@@ -1,166 +1,96 @@
+# Stash cloud profile (iOS/tvOS 3.6+ or macOS 4.3+).
+# Merge local nodes and a default proxy group.
 mode: rule
 log-level: info
+ipv6: false
 
 dns:
-  ipv6: false
-
-  # DNS 上游连接也参与 rules 分流。
+  # Required here: overseas DoH goes through default; domestic DoH goes DIRECT.
   follow-rule: true
-
-  # 不跳过 DoH / DoT 的 TLS 证书校验。
   skip-cert-verify: false
-
-  # 解析 DNS 服务器自身的域名，例如 doh.pub。
-  # 使用 IP 形式的 DoH，避免启动解析依赖明文 DNS。
-  default-nameserver:
+  ipv6: false
+  # IP-address DoH bootstrap and node DNS avoid circular dependence on the proxy.
+  default-nameserver: &domestic-dns
     - https://223.5.5.5/dns-query
     - https://223.6.6.6/dns-query
-
-  # 专门解析代理服务器自身的域名。
-  # 此链路独立直连，不跟随 follow-rule，避免循环依赖。
-  proxy-server-nameserver:
-    - https://223.5.5.5/dns-query
-    - https://223.6.6.6/dns-query
-
-  # 未匹配 nameserver-policy 时使用这些 DNS。
-  # 通过下方 rules 强制经 default 代理组访问。
-  nameserver:
+  proxy-server-nameserver: *domestic-dns
+  nameserver: &foreign-dns
     - https://1.1.1.1/dns-query
-    - https://8.8.8.8/dns-query
-
-  # 按“被查询的域名”选择 DNS。
+    - https://1.0.0.1/dns-query
+  # Keep set order aligned with routing: proxy exceptions before domestic sets.
+  # Do not add a standalone '+.cn' key: wildcard policies precede set policies.
   nameserver-policy:
-    '+.cn':
-      - https://223.5.5.5/dns-query
-      - https://doh.pub/dns-query
-
-    'rule-set:china':
-      - https://223.5.5.5/dns-query
-      - https://doh.pub/dns-query
-
-    'geosite:cn':
-      - https://223.5.5.5/dns-query
-      - https://doh.pub/dns-query
-
-    # 有需要时才为实际的内网域名添加专用解析。
-    # system 仅用于这些明确指定的内网后缀，
-    # 不要把它加入上面的公共 nameserver 列表。
-    #
-    # '+.lan': system
-    # '+.home.arpa': system
-
-  # Stash 默认使用 Fake-IP。
+    'rule-set:private': system
+    'rule-set:proxy,microsoft': *foreign-dns
+    'rule-set:china,china_public': *domestic-dns
+  # Stash uses Fake-IP by default. Keep only protocols that need real answers here.
   fake-ip-range: 198.18.0.1/16
-
-  # 这些域名直接返回真实解析结果，不返回 Fake-IP。
-  # 此列表只改变返回地址类型，不决定 DNS 或连接出站。
   fake-ip-filter:
-    # STUN / ICE
+    - 'rule-set:private'
+    - '+.ts.net'
     - '+.stun.*.*'
     - '+.stun.*.*.*'
     - '+.stun.*.*.*.*'
     - '+.stun.*.*.*.*.*'
-
-    # 部分语音、游戏和网络检测服务
-    - 'lens.l.google.com'
     - '*.n.n.srv.nintendo.net'
     - '+.stun.playstation.net'
     - 'xbox.*.*.microsoft.com'
-    - '*.*.xboxlive.com'
-    - '*.msftncsi.com'
-    - '*.msftconnecttest.com'
+    - '+.xboxlive.com'
+    - '+.msftncsi.com'
+    - '+.msftconnecttest.com'
 
-    # 启用上面的内网 DNS policy 后，可同时启用：
-    # - '+.lan'
-    # - '+.home.arpa'
-
+# One classical/text URL per set, shared by all four clients. No generated files.
 rule-providers:
-  youtube_api:
+  private:
     behavior: classical
-    format: yaml
-    url: https://raw.githubusercontent.com/john-smith-matter/vpn_conf/refs/heads/main/youtube_api.yaml
+    format: text
+    url: https://raw.githubusercontent.com/john-smith-matter/vpn_conf/main/private.list
     interval: 86400
-
-  youtube_cdn:
+  reject:
     behavior: classical
-    format: yaml
-    url: https://raw.githubusercontent.com/john-smith-matter/vpn_conf/refs/heads/main/youtube_cdn.yaml
+    format: text
+    url: https://raw.githubusercontent.com/john-smith-matter/vpn_conf/main/reject.list
     interval: 86400
-
+  public_tracker:
+    behavior: classical
+    format: text
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/classical/category-public-tracker.list
+    interval: 86400
+  proxy:
+    behavior: classical
+    format: text
+    url: https://raw.githubusercontent.com/john-smith-matter/vpn_conf/main/proxy.list
+    interval: 86400
   microsoft:
     behavior: classical
-    format: yaml
-    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Microsoft/Microsoft.yaml
+    format: text
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/classical/microsoft.list
     interval: 86400
-
   china:
     behavior: classical
-    format: yaml
-    url: https://raw.githubusercontent.com/john-smith-matter/vpn_conf/refs/heads/main/china.yaml
+    format: text
+    url: https://raw.githubusercontent.com/john-smith-matter/vpn_conf/main/china.list
+    interval: 86400
+  china_public:
+    behavior: classical
+    format: text
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/China/China.list
+    interval: 86400
+  china_ip:
+    behavior: classical
+    format: text
+    url: https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/cncidr.txt
     interval: 86400
 
+# Local overrides supply nodes, proxy-providers and a usable default proxy group.
+
 rules:
-  # --------------------------------------------------
-  # 1. DNS 上游连接的出站方式：必须放在普通业务规则之前
-  # --------------------------------------------------
-
-  # 国内 DNS：加密直连。
-  - DOMAIN,dns.alidns.com,DIRECT
-  - DOMAIN,doh.pub,DIRECT
-  - IP-CIDR,223.5.5.5/32,DIRECT,no-resolve
-  - IP-CIDR,223.6.6.6/32,DIRECT,no-resolve
-
-  # 境外 DNS：强制经过实际代理。
-  - DOMAIN,dns.google,default
-  - DOMAIN,cloudflare-dns.com,default
-  - DOMAIN,one.one.one.one,default
-  - IP-CIDR,1.1.1.1/32,default,no-resolve
-  - IP-CIDR,1.0.0.1/32,default,no-resolve
-  - IP-CIDR,8.8.8.8/32,default,no-resolve
-  - IP-CIDR,8.8.4.4/32,default,no-resolve
-
-  # --------------------------------------------------
-  # 2. 局域网与本机地址
-  # 不使用这些规则主动触发域名解析。
-  # --------------------------------------------------
-  - IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
-  - IP-CIDR,10.0.0.0/8,DIRECT,no-resolve
-  - IP-CIDR,172.16.0.0/12,DIRECT,no-resolve
-  - IP-CIDR,192.168.0.0/16,DIRECT,no-resolve
-  - IP-CIDR,169.254.0.0/16,DIRECT,no-resolve
-  - IP-CIDR6,::1/128,DIRECT,no-resolve
-  - IP-CIDR6,fc00::/7,DIRECT,no-resolve
-  - IP-CIDR6,fe80::/10,DIRECT,no-resolve
-
-  # --------------------------------------------------
-  # 3. 保留现有的明确代理规则
-  # --------------------------------------------------
-  - DOMAIN-KEYWORD,github,default
-
-  - DOMAIN-KEYWORD,chatgpt,default
-  - DOMAIN-SUFFIX,openai.com,default
-
-  - DOMAIN-SUFFIX,cloudflare.com,default
-
-  - RULE-SET,youtube_cdn,default
-  - RULE-SET,youtube_api,default
+  - RULE-SET,private,DIRECT
+  - RULE-SET,reject,REJECT
+  - RULE-SET,public_tracker,REJECT
+  - RULE-SET,proxy,default
   - RULE-SET,microsoft,default
-
-  - DOMAIN-SUFFIX,ifconfig.me,default
-
-  # --------------------------------------------------
-  # 4. 国内域名直连
-  # --------------------------------------------------
   - RULE-SET,china,DIRECT
-  - DOMAIN-SUFFIX,cn,DIRECT
-  - GEOSITE,cn,DIRECT
-
-  # 保留原配置中的公共 Tracker 拦截。
-  - GEOSITE,category-public-tracker,REJECT
-
-  # 与 Shadowrocket 的 GEOIP,CN,DIRECT 对应。
-  # 注意：对尚未解析的域名，这条规则可能触发真实 DNS 查询。
-  - GEOIP,CN,DIRECT
-
-  # 其余流量代理。
+  - RULE-SET,china_public,DIRECT
+  - RULE-SET,china_ip,DIRECT
   - MATCH,default
