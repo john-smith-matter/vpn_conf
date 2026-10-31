@@ -46,6 +46,19 @@ Mihomo 使用 `respect-rules`，Stash 使用 `follow-rule`；节点域名使用�
 
 Mihomo 保留 `redir-host` 和嗅探，Stash / Shadowrocket 保留 Fake-IP。私网 IP 和 DNS 上游 IP 规则带 `no-resolve`；国内 IP 兜底允许为未匹配域名解析真实地址。
 
+三份 YAML 均开启顶层 `ipv6: true` 和 `dns.ipv6: true`；Shadowrocket 使用原生的 `ipv6 = true`。这样允许连接只有 AAAA 记录的节点，也允许应用获得 AAAA 响应。IPv4 地址的 DoH 服务器同样能返回 AAAA，不需要为了打开 IPv6 而更换 DNS 地址。
+
+| 客户端 | 云端配置 | 客户端中需要确认 |
+| --- | --- | --- |
+| Clash Meta for Android | 两级 IPv6 均开启；保留本地 usa 文件 provider | 网络设置开启“允许 IPv6”；需要受控的应用不能被排除；关闭“允许绕过”可限制应用主动绕开 VPN |
+| Clash Verge Rev | 两级 IPv6、TUN 自动路由、严格路由、DNS 劫持和 IPv6 TUN 地址 | 应用设置中启用 IPv6 和 TUN；若保存过 TUN 或 DNS 覆写选项，确认其没有覆盖云端的对应值 |
+| Stash | 两级 IPv6 均开启 | 网络设置开启“启用 Tunnel IPv6 路由”，使 IPv6 字面量连接也进入 TUN |
+| Shadowrocket | `ipv6 = true`；公共 IPv6 未加入旁路路由 | 使用配置分流，保留云端规则及 `FINAL,default`，不在本地另加公共 IPv6 的旁路网段 |
+
+仅靠 IPv6 DNS 开关不能保证接管路由。Android 的 VPN 地址/路由由客户端的 [TunService](https://github.com/MetaCubeX/ClashMetaForAndroid/blob/main/service/src/main/java/com/github/kr328/clash/service/TunService.kt)管理；Stash 也明确要求为直接 IPv6 TUN 流量打开[独立的 IPv6 路由选项](https://stash.wiki/en/faq/ipv6-compatible)。Verge 的应用设置对部分配置有[更高优先级](https://www.clashverge.dev/guide/extend.html)，云端不能强制覆盖这些本地开关。
+
+已进入内核的 IPv6 流量仍按现有规则匹配：私网和国内地址直连，其余落到 `MATCH,default` / `FINAL,default`。共享国内 IP 上游含 IPv4 和 IPv6，私网列表仅列出明确的本地范围，没有把整个公共 IPv6 网段直连或排除出隧道。已有意设置的国内和私网直连属于分流策略，开启 IPv6不会额外添加直连规则。本机 Mihomo v1.19.32 已验证纯 AAAA 节点连接、应用 AAAA 响应以及公共 IPv6 字面量目标经代理转发；这不代替在各设备上确认实际 VPN 路由。设备底层网络也需要能到达节点的 IPv6 地址。
+
 Shadowrocket 使用 `direct-dns-server` 区分直连域名，并以 `#proxy=default` 指定境外 DoH 和加密备用 DNS 的出站。使用 `.lan`、`.home.arpa` 或内网反向解析时，在本地 `[Host]` 按实际网络补充 DNS，例如 `*.lan = server:192.168.1.1`。云端不假定路由器地址。
 
 ## 代理节点如何接入
@@ -71,7 +84,7 @@ proxy-groups:
     empty-fallback: REJECT
 ```
 
-把真实节点保存在设备的 `usa.yaml`，其结构是 `proxies:` 数组。这是内核在运行时读取的外部节点数据，不需要客户端支持覆写；更新云端规则配置不会改写该文件。**路径相对于 Mihomo 数据目录（启动参数 `-d`），不是 GitHub URL，也不一定是配置文件所在目录。** 图形客户端可能使用其管理的配置资源目录，需要先确认它能导入该文件。
+把真实节点保存在设备的 `usa.yaml`，其结构是 `proxies:` 数组。这是运行时读取的外部节点数据，不需要客户端支持覆写。**Clash Meta for Android 会将 `path: ./usa.yaml` 重写到当前配置的 `providers/usa.yaml`，需要通过该配置的文件管理入口导入 provider 资源文件。** 普通桌面 Mihomo 则相对于其数据目录（启动参数 `-d`）解析路径；不能把这个桌面路径规则直接套用到 Android。此目录处理可在 [Android 官方源码](https://github.com/MetaCubeX/ClashMetaForAndroid/blob/main/core/src/main/golang/native/config/process.go)中核对。
 
 使用 provider 时，Meta 的主配置不必再重复定义 `proxies`。该云端文件自身已有完整的 provider、组及规则引用，下载后无需注入临时组即可通过内核配置校验。`empty-fallback: REJECT` 使空节点组不会自动退回直连；这不代表缺少节点时能够联网。
 

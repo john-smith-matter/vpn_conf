@@ -1,7 +1,8 @@
-# Complete Mihomo cloud profile. Nodes are read from the core's local ./usa.yaml.
+# Clash Meta for Android cloud profile. Import usa.yaml as a local provider resource.
 mode: rule
 log-level: info
-ipv6: false
+# Allow IPv6 transport to proxy nodes, including servers with AAAA records only.
+ipv6: true
 
 # Retain redir-host; sniff HTTP Host / TLS SNI / QUIC for shared-IP domains.
 sniffer:
@@ -27,7 +28,8 @@ dns:
   listen: 127.0.0.1:53
   enhanced-mode: redir-host
   respect-rules: true
-  ipv6: false
+  # Allow AAAA answers as well as IPv6 proxy-node connections.
+  ipv6: true
   # IP-address DoH bootstrap and node DNS avoid circular dependence on the proxy.
   default-nameserver: &domestic-dns
     - https://223.5.5.5/dns-query
@@ -111,7 +113,7 @@ rule-providers:
     interval: 86400
 
 # File providers load nodes independently of client-side profile overrides.
-# ./usa.yaml is relative to Mihomo's data directory (-d), not this URL.
+# Android rewrites ./usa.yaml to the current profile's providers/usa.yaml.
 proxy-providers:
   usa:
     type: file

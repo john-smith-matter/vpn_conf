@@ -2,13 +2,14 @@
 # Merge local nodes and a default proxy group.
 mode: rule
 log-level: info
-ipv6: false
+ipv6: true
+# For literal IPv6 traffic, also enable Tunnel IPv6 Routing in Stash Network Settings.
 
 dns:
   # Required here: overseas DoH goes through default; domestic DoH goes DIRECT.
   follow-rule: true
   skip-cert-verify: false
-  ipv6: false
+  ipv6: true
   # IP-address DoH bootstrap and node DNS avoid circular dependence on the proxy.
   default-nameserver: &domestic-dns
     - https://223.5.5.5/dns-query
