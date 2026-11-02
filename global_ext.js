@@ -13,6 +13,8 @@
  * 每个目标会生成一个同名 direct 代理，并为其域名和 IP 网段生成
  * 优先路由规则。配置了 dns 时，还会自动附加目标代理名，
  * 并为该目标的域名生成 DNS 策略。
+ * domains 支持精确域名、"+.example.com"、".example.com" 和整段 "*" 通配。
+ * system、dhcp、rcode 等特殊 DNS 保留原值，不附加代理出口。
  */
 
 const SPECIFIC_TARGETS_FIELD = "x-specific-targets";
@@ -42,8 +44,36 @@ function addProxyToDnsServer(server, targetName) {
     return null;
   }
 
-  const separator = normalizedServer.indexOf("#") === -1 ? "#" : "&";
-  return `${normalizedServer}${separator}${targetName}`;
+  // 这些类型有独立的查询方式，不支持用目标 direct 代理绑定出口。
+  if (
+    normalizedServer === "system" ||
+    /^(system|dhcp|rcode|tailscale|ts|easytier|et):\/\//i.test(normalizedServer)
+  ) {
+    return normalizedServer;
+  }
+
+  const fragmentIndex = normalizedServer.indexOf("#");
+  let address = fragmentIndex === -1
+    ? normalizedServer
+    : normalizedServer.slice(0, fragmentIndex);
+  const parameters = fragmentIndex === -1
+    ? []
+    : normalizedServer.slice(fragmentIndex + 1).split("&").filter(function (parameter) {
+        // 裸参数是原来的代理/接口名；替换它，同时保留 key=value 选项。
+        return parameter.indexOf("=") !== -1;
+      });
+
+  // 裸 IPv6 必须先加方括号，否则加上 # 后内核无法再识别为纯 IP。
+  if (
+    address.indexOf("://") === -1 &&
+    address.charAt(0) !== "[" &&
+    (address.match(/:/g) || []).length > 1
+  ) {
+    address = `[${address}]`;
+  }
+
+  parameters.push(encodeURIComponent(targetName));
+  return `${address}#${parameters.join("&")}`;
 }
 
 function addProxyToDns(dns, targetName) {
@@ -74,6 +104,20 @@ function readSpecificTargets(config) {
     return [];
   }
 
+  const unavailableNames = Object.create(null);
+  ["DIRECT", "REJECT", "REJECT-DROP", "COMPATIBLE", "PASS", "PASS-RULE", "GLOBAL", "RULES"]
+    .forEach(function (name) {
+      unavailableNames[name] = true;
+    });
+  if (Array.isArray(config["proxy-groups"])) {
+    config["proxy-groups"].forEach(function (group) {
+      if (isObject(group) && typeof group.name === "string") {
+        unavailableNames[group.name] = true;
+      }
+    });
+  }
+  const targetNames = Object.create(null);
+
   return Object.keys(rawTargets)
     .map(function (name) {
       const rawTarget = rawTargets[name];
@@ -90,9 +134,28 @@ function readSpecificTargets(config) {
 
       const targetName = name.trim();
 
+      if (unavailableNames[targetName] || targetNames[targetName]) {
+        throw new Error(`${SPECIFIC_TARGETS_FIELD}: 目标名称 "${targetName}" 与代理组、内置名称或其他目标冲突`);
+      }
+      if (/[,#&=\r\n]/.test(targetName)) {
+        throw new Error(`${SPECIFIC_TARGETS_FIELD}: 目标名称 "${targetName}" 包含规则或 DNS 参数分隔符`);
+      }
+      targetNames[targetName] = true;
+
+      const domains = stringList(rawTarget.domains);
+      domains.forEach(function (domain) {
+        const labels = domain.replace(/^(?:\+\.|\.)/, "").split(".");
+        if (/[\s,]/.test(domain) || labels.some(function (label) {
+          return label === "" || label.indexOf("+") !== -1 ||
+            (label.indexOf("*") !== -1 && label !== "*");
+        })) {
+          throw new Error(`${SPECIFIC_TARGETS_FIELD}: 目标 "${targetName}" 的域名模式 "${domain}" 无效`);
+        }
+      });
+
       return {
         name: targetName,
-        domains: stringList(rawTarget.domains),
+        domains: domains,
         ipCidrs: stringList(rawTarget["ip-cidrs"]),
         dns: addProxyToDns(rawTarget.dns, targetName),
         interfaceName: interfaceName.trim(),
@@ -104,16 +167,31 @@ function readSpecificTargets(config) {
 }
 
 /**
- * nameserver-policy 使用 "+.example.com"，
- * rules 使用 "DOMAIN-SUFFIX,example.com,..."。
+ * 与 nameserver-policy 的域名通配语义保持一致。
+ * DNS 中的 * 只匹配一层标签，不能直接放入 DOMAIN-SUFFIX。
  */
-function toRuleDomain(domain) {
-  return domain.replace(/^\+\./, "").replace(/^\./, "");
+function makeDomainRule(domain, targetName) {
+  const includeRoot = domain.indexOf("+.") === 0;
+  const subdomainsOnly = domain.charAt(0) === ".";
+  const suffix = domain.replace(/^(?:\+\.|\.)/, "");
+
+  if (includeRoot && suffix.indexOf("*") === -1) {
+    return `DOMAIN-SUFFIX,${suffix},${targetName}`;
+  }
+  if (!includeRoot && !subdomainsOnly && suffix.indexOf("*") === -1) {
+    return `DOMAIN,${suffix},${targetName}`;
+  }
+
+  const pattern = suffix.split(".").map(function (label) {
+    return label === "*" ? "[^.]+" : label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }).join("\\.");
+  const prefix = includeRoot ? "(?:[^.]+\\.)*" : subdomainsOnly ? "(?:[^.]+\\.)+" : "";
+  return `DOMAIN-REGEX,^${prefix}${pattern}$,${targetName}`;
 }
 
 function makeRules(target) {
   const domainRules = target.domains.map(function (domain) {
-    return `DOMAIN-SUFFIX,${toRuleDomain(domain)},${target.name}`;
+    return makeDomainRule(domain, target.name);
   });
 
   const ipRules = target.ipCidrs.map(function (cidr) {
@@ -133,7 +211,8 @@ function main(config) {
   if (Array.isArray(config.proxies)) {
     config.proxies.forEach(function (proxy) {
       if (isObject(proxy)) {
-        proxy.ip_version = "ipv6_prefer";
+        proxy["ip-version"] = "ipv6-prefer";
+        delete proxy.ip_version;
       }
     });
   }
@@ -166,7 +245,7 @@ function main(config) {
       name: target.name,
       type: "direct",
       udp: true,
-      ip_version: "ipv6_prefer",
+      "ip-version": "ipv6-prefer",
       "interface-name": target.interfaceName,
     };
   });

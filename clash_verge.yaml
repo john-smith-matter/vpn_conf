@@ -1,18 +1,15 @@
 # Clash Verge Rev cloud profile. Local extensions supply nodes and replace default.
 mode: rule
 log-level: info
+# Identify Tailscale even when it connects to changing public peer IPs.
+find-process-mode: always
 ipv6: true
 mixed-port: 7890
 external-controller: 127.0.0.1:9090
 
-# Enable TUN in Verge's UI. These routes also capture IPv6 when TUN is active.
+# Set TUN enable, routing, DNS hijack and exclusions in Verge's UI; see README.
+# Keep the IPv6 TUN address here; Verge's TUN settings do not manage this field.
 tun:
-  auto-route: true
-  auto-detect-interface: true
-  strict-route: true
-  dns-hijack:
-    - any:53
-    - tcp://any:53
   inet6-address:
     - 'fdfe:dcba:9876::1/126'
 
@@ -133,6 +130,29 @@ proxy-groups:
     proxies: [REJECT]
 
 rules:
+  # Transport bypass comes before all downloaded rules and MATCH.
+  # Windows service, CLI and GUI.
+  - PROCESS-NAME,tailscaled.exe,DIRECT
+  - PROCESS-NAME,tailscale.exe,DIRECT
+  - PROCESS-NAME,tailscale-ipn.exe,DIRECT
+  # macOS: CLI daemon, GUI, App Store extension and standalone extension.
+  - PROCESS-NAME,tailscaled,DIRECT
+  - PROCESS-NAME,tailscale,DIRECT
+  - PROCESS-NAME,Tailscale,DIRECT
+  - PROCESS-NAME,IPNExtension,DIRECT
+  - PROCESS-NAME,io.tailscale.ipn.macos,DIRECT
+  - PROCESS-NAME,io.tailscale.ipn.macos.network-extension,DIRECT
+  - PROCESS-NAME,io.tailscale.ipn.macsys,DIRECT
+  - PROCESS-NAME,io.tailscale.ipn.macsys.network-extension,DIRECT
+  # Android package matching requires client support; see README for VPN limits.
+  - PROCESS-NAME,com.tailscale.ipn,DIRECT
+  # Control/DERP hostname fallback; dynamic peer IPs need process matching above.
+  - DOMAIN-SUFFIX,tailscale.com,DIRECT
+  - DOMAIN-SUFFIX,tailscale.io,DIRECT
+  - DOMAIN-SUFFIX,ts.net,DIRECT
+  # Keep tailnet traffic independent of remote rule-provider availability.
+  - IP-CIDR,100.64.0.0/10,DIRECT,no-resolve
+  - IP-CIDR6,fd7a:115c:a1e0::/48,DIRECT,no-resolve
   - RULE-SET,private,DIRECT
   - RULE-SET,reject,REJECT
   - RULE-SET,public_tracker,REJECT
