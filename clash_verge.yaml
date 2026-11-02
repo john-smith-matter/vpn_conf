@@ -7,9 +7,15 @@ ipv6: true
 mixed-port: 7890
 external-controller: 127.0.0.1:9090
 
-# Set TUN enable, routing, DNS hijack and exclusions in Verge's UI; see README.
-# Keep the IPv6 TUN address here; Verge's TUN settings do not manage this field.
+# Set TUN enable, routing and DNS hijack in Verge's UI; see README.
+# Saved TUN settings override subscription defaults: mirror these exclusions there.
 tun:
+  # Leave Tailscale overlay routing to the OS; keep transport DIRECT rules below.
+  # Connected LAN routes already take precedence over the TUN default route.
+  route-exclude-address:
+    - 100.64.0.0/10
+    - 'fd7a:115c:a1e0::/48'
+  # Verge's TUN settings do not manage this IPv6 interface address.
   inet6-address:
     - 'fdfe:dcba:9876::1/126'
 

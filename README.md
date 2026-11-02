@@ -51,13 +51,13 @@ Mihomo 保留 `redir-host` 和嗅探，Stash / Shadowrocket 保留 Fake-IP。私
 | 客户端 | 云端配置 | 客户端中需要确认 |
 | --- | --- | --- |
 | Clash Meta for Android | 两级 IPv6 均开启；保留本地 usa 文件 provider；不配置 `tun` | 网络设置开启“允许 IPv6”；需要受控的应用不能被排除；关闭“允许绕过”可限制应用主动绕开 VPN |
-| Clash Verge Rev | 两级 IPv6 均开启；`tun` 仅保留 IPv6 接口地址 `inet6-address` | 应用设置中启用 IPv6 和 TUN，并按下表保存 TUN 参数；核对 DNS 覆写没有改变预期的解析配置 |
+| Clash Verge Rev | 两级 IPv6 均开启；`tun` 提供 Tailnet 路由排除默认值和 IPv6 接口地址 `inet6-address` | 应用设置中启用 IPv6 和 TUN，并按下表保存 TUN 参数；核对 DNS 覆写没有改变预期的解析配置 |
 | Stash | 两级 IPv6 均开启 | 网络设置开启“启用 Tunnel IPv6 路由”，使 IPv6 字面量连接也进入 TUN |
 | Shadowrocket | `ipv6 = true`；公共 IPv6 未加入旁路路由 | 使用配置分流，保留云端规则及 `FINAL,default`，不在本地另加公共 IPv6 的旁路网段 |
 
 仅靠 IPv6 DNS 开关不能保证接管路由。Android 的 VPN 本身通过 TUN 接口接管流量，VPN 地址、路由和应用访问控制由客户端的 [TunService](https://github.com/MetaCubeX/ClashMetaForAndroid/blob/main/service/src/main/java/com/github/kr328/clash/service/TunService.kt)管理；CMFA 会[关闭订阅的原生 TUN](https://github.com/MetaCubeX/ClashMetaForAndroid/blob/main/core/src/main/golang/native/config/process.go)，所以 `clash_meta.yaml` 不再保留 `tun` 段，顶层 `dns` 仍用于内核解析。Stash 也明确要求为直接 IPv6 TUN 流量打开[独立的 IPv6 路由选项](https://stash.wiki/en/faq/ipv6-compatible)。
 
-Verge 的 `tun.enable` 始终由应用控制；在 TUN 设置中保存过的字段会覆盖订阅，并在扩展执行后回写，扩展配置或脚本也不能强制覆盖。未被应用接管的字段仍可由订阅提供。为统一管理，本仓库将自动路由、严格路由、DNS 劫持和路由排除移到客户端，仅在订阅中保留未被 TUN 设置接管的 `inet6-address`。此地址用于 IPv6 TUN 接口，不会自行开启 TUN 或添加所需路由。详见[应用设置优先级](https://www.clashverge.dev/guide/extend.html#与应用设置的优先级)。
+Verge 的 `tun.enable` 始终由应用控制；在 TUN 设置中保存过的字段会覆盖订阅，并在扩展执行后回写，扩展配置或脚本也不能强制覆盖。未被应用接管的字段仍可由订阅提供。本仓库将自动路由、严格路由和 DNS 劫持交给客户端管理；订阅提供 Tailnet 的 `route-exclude-address` 默认值，客户端若已保存此字段，需同步下表中的两项，并保留设备原有的其他排除项。订阅还保留未被 TUN 设置接管的 `inet6-address`，它用于 IPv6 TUN 接口，不会自行开启 TUN 或添加所需路由。详见[应用设置优先级](https://www.clashverge.dev/guide/extend.html#与应用设置的优先级)。
 
 使用 `clash_verge.yaml` 时，在 Verge 应用设置中启用 IPv6，并在 TUN 设置中保存以下值：
 
@@ -68,9 +68,9 @@ Verge 的 `tun.enable` 始终由应用控制；在 TUN 设置中保存过的字�
 | 自动检测出口网卡（`auto-detect-interface`） | `true` |
 | 严格路由（`strict-route`） | `true` |
 | DNS 劫持（`dns-hijack`） | `any:53` 和 `tcp://any:53`，分别表示 UDP / TCP 53 端口 |
-| 路由排除（`route-exclude-address`） | `100.64.0.0/10` 和 `fd7a:115c:a1e0::/48`，供系统 Tailscale 路由处理 |
+| 路由排除（`route-exclude-address`） | `100.64.0.0/10` 和 `fd7a:115c:a1e0::/48`，交给系统 Tailscale 路由处理 |
 
-保存后，在订阅页通过“查看运行时订阅”核对上述值，以及订阅保留的 `tun.inet6-address: ['fdfe:dcba:9876::1/126']`。这些客户端设置不会随本仓库订阅同步，需要在每台设备上配置。
+保存后，在订阅页通过“查看运行时订阅”核对上述值，尤其是 `tun.route-exclude-address` 两项是否保留，以及订阅保留的 `tun.inet6-address: ['fdfe:dcba:9876::1/126']`。已保存的客户端设置不会随本仓库订阅同步，需要在每台设备上配置。
 
 已进入内核的 IPv6 流量仍按现有规则匹配：私网和国内地址直连，其余落到 `MATCH,default` / `FINAL,default`。共享国内 IP 上游含 IPv4 和 IPv6，私网列表仅列出明确的本地范围，没有把整个公共 IPv6 网段直连或排除出隧道。已有意设置的国内和私网直连属于分流策略，开启 IPv6不会额外添加直连规则。本机 Mihomo v1.19.32 已验证纯 AAAA 节点连接、应用 AAAA 响应以及公共 IPv6 字面量目标经代理转发；这不代替在各设备上确认实际 VPN 路由。设备底层网络也需要能到达节点的 IPv6 地址。
 
@@ -82,7 +82,9 @@ Shadowrocket 使用 `direct-dns-server` 区分直连域名，并以 `#proxy=defa
 
 两份配置还独立直连 `tailscale.com`、`tailscale.io`、`ts.net` 和 tailnet IPv4/IPv6 网段。前两个域名使用显式 `#DIRECT` 的国内 DoH，避免 Tailscale 的控制连接依赖 `default` 代理才能解析。`ts.net` 默认交给系统 DNS；设备必须已有可用的 Tailscale DNS，或用本地覆写指定 MagicDNS 的实际出口。现有 `global_ext.js` 生成的 `100.100.100.100#tailscale-direct` 策略仍可优先使用。
 
-Verge 桌面端需要在客户端 TUN 设置中排除 `100.64.0.0/10` 和 `fd7a:115c:a1e0::/48`，由系统 Tailscale 路由处理，并设置 `strict-route: true`，优先保留 Windows 普通 DNS 的防泄漏过滤。这些参数已移出订阅，必须按上表在客户端保存。关闭严格路由会允许本可被过滤的 DNS 请求经其他网卡发出，单靠 `dns-hijack` 不能覆盖所有这些请求。它不是所有 TCP/UDP 流量的通用防绕过开关，也不改变规则中有意设置的 `DIRECT`。Tailscale 的进程、域名和网段例外仍保留在订阅中，不为兼容 MagicDNS 放宽严格路由。CMFA 的 VPN 路由由 Android 客户端管理，不使用这些桌面 TUN 参数。
+Verge 桌面端需要排除 `100.64.0.0/10` 和 `fd7a:115c:a1e0::/48`，由系统 Tailscale 路由处理。这些默认值已写入订阅，客户端 TUN 设置若已保存路由排除，也必须按上表同步。`DIRECT` 规则只在流量进入 Mihomo 后分流，路由排除则在 TUN 接管层生效；两者不能互相替代。继续在客户端设置 `strict-route: true`，保留 Windows 普通 DNS 的防泄漏过滤。关闭严格路由会允许本可被过滤的 DNS 请求经其他网卡发出，单靠 `dns-hijack` 不能覆盖所有这些请求。它不是所有 TCP/UDP 流量的通用防绕过开关，也不改变规则中有意设置的 `DIRECT`。Tailscale 的进程、域名和网段例外仍保留在订阅中，不为兼容 MagicDNS 放宽严格路由。CMFA 的 VPN 路由由 Android 客户端管理，不使用这些桌面 TUN 参数。
+
+rmbook 排查中，普通 LAN UDP 和绑定 WLAN 的 UDP 均约 2 ms，绑定 Mihomo 接口则超时；同时观察到 Tailscale 的 STUN 探测进入代理。本机已有 WLAN 的 `192.168.31.0/24` 直连路由，普通目的路由优先于 Mihomo 的默认路由，因此不在共享配置中额外排除这个 LAN 网段。Tailscale 主动绑定默认接口是另一层问题。按本机 Mihomo v1.19.32 使用的 [sing-tun v0.4.27 路由生成实现](https://github.com/MetaCubeX/sing-tun/blob/v0.4.27/tun_rules.go#L100-L143)，设置 IPv4 排除项会把 `0.0.0.0/0` 拆成扣除排除项后的多个网段；而 [Tailscale 1.104.2 的默认接口选择](https://github.com/tailscale/tailscale/blob/v1.104.2/net/netmon/interfaces_windows.go#L141-L203)只考虑前缀长度为 0 的路由。因此，仅 Tailnet 排除项就可能间接避免 Tailscale 选中 Mihomo，此推断仍需运行时验证。更新订阅并确认运行时排除项后，重新建立 Tailscale 连接，执行 `tailscale ping --c 5 --until-direct=false rmbook`，以 `via 192.168.31.175:41641` 和接近局域网的延迟作为验收；公网端点显示 `direct` 不代表走 LAN。若仍经公网端点，需继续检查 Tailscale 的出口接口选择。
 
 Windows 上 Tailscale 在适用的 DNS 模式下会向系统 hosts 写入 tailnet 名称。应用通过系统解析器命中这些记录，或 Mihomo 使用默认启用的 `dns.use-system-hosts` 命中系统 hosts 时，不需要向 MagicDNS 发起查询，严格路由不会阻断这一解析路径。hosts 写入受 DNS 模式和客户端设置等条件限制，主动查询 DNS 的工具也可能绕过 hosts；因此不保证所有 MagicDNS 查询均不受影响。tailnet 网段的路由排除不等于 Windows DNS 防火墙例外，保留严格路由可能影响直接查询 `100.100.100.100:53`；此处接受该兼容性风险，可使用 Tailscale IP 或已写入 hosts 的名称。
 
